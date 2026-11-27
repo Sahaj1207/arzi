@@ -58,8 +58,10 @@ export function useInterview({ lang, setLang }) {
   useEffect(() => stop, [stop]);
 
   // runner: which flow to run (the full interview, or runCorrection for fixes).
-  const start = useCallback(async (runner = runInterview) => {
+  // provider: speech provider for this run (the sample case passes a scripted one).
+  const start = useCallback(async (runner = runInterview, { provider: fixedProvider } = {}) => {
     stop();
+    const providerFor = () => fixedProvider ?? getSpeechProvider();
     const ac = new AbortController();
     abortRef.current = ac;
     const { signal } = ac;
@@ -85,7 +87,7 @@ export function useInterview({ lang, setLang }) {
         if (!signal.aborted) patch({ phase: 'idle' });
       },
       ask: async ({ prompt, parse, keyboard }) => {
-        let useKeyboard = keyboard || !getSpeechProvider().isSupported();
+        let useKeyboard = keyboard || !providerFor().isSupported();
         let reason = keyboard ? null : 'unsupportedBrowser';
         let promptSpoken = false;
 
@@ -97,7 +99,7 @@ export function useInterview({ lang, setLang }) {
               prompt,
               lang: langRef.current,
               parse,
-              provider: getSpeechProvider(),
+              provider: providerFor(),
               speak: speakTracked,
               signal,
               onState: (s) => !signal.aborted && patch(s),

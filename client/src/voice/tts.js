@@ -3,6 +3,7 @@
 // exists, so the caller can rely on on-screen text instead).
 import { getLanguage } from '@arzi/shared';
 import { hasSpeechSynthesis } from './support.js';
+import { getRate } from '../lib/prefs.js';
 
 // Voices load asynchronously; start loading as soon as this file is imported.
 if (hasSpeechSynthesis()) speechSynthesis.getVoices();
@@ -29,7 +30,7 @@ export function pickVoice(voices, speechTag) {
   return best ?? null;
 }
 
-export async function speak(text, langCode, { rate = 0.92 } = {}) {
+export async function speak(text, langCode, { rate = getRate() } = {}) {
   if (!hasSpeechSynthesis()) return { spoken: false };
   const { speechTag } = getLanguage(langCode);
   const voice = pickVoice(await loadVoices(), speechTag);

@@ -40,9 +40,22 @@ class Stop extends Error {
 const MAX_DESCRIBE_TRIES = 2;
 const REJECTIONS_BEFORE_TYPING = 2;
 
+// opts.askAiConsent: only when an outside AI service (Sarvam / Anthropic) is
+// configured and the citizen has not answered yet this session. Asked BEFORE
+// anything they say could be sent to that service; "no" keeps the session on
+// browser speech and demo drafting. The answer is returned as result.aiConsent.
 export async function runInterview(io, opts = {}) {
   const s = createSession(io, opts);
   return s.guard(async () => {
+    if (opts.askAiConsent) {
+      const { value } = await s.q(
+        (lang) => t(lang, 'aiConsentAsk', { providers: opts.aiProviders ?? 'an AI service' }),
+        parseYesNo,
+      );
+      s.ctx.aiConsent = value === 'yes';
+      io.onAiConsent?.(s.ctx.aiConsent);
+      await s.io.say(t(s.L(), s.ctx.aiConsent ? 'aiConsentYes' : 'aiConsentNo'));
+    }
     await s.askProblem();
     if (s.ctx.outcome) return s.ctx.outcome; // not a deposit problem
     for (const field of FIELDS) await s.askField(field);
@@ -69,11 +82,12 @@ export async function runCorrection(io, { fields, note = '', ...opts }) {
 }
 
 function createSession(io, { today = new Date() } = {}) {
-  const ctx = { problem: '', fields: {}, transcript: [], outcome: null };
+  const ctx = { problem: '', fields: {}, transcript: [], outcome: null, aiConsent: null };
   const L = () => io.getLang();
   const result = (outcome, extra = {}) => ({
     outcome,
     lang: L(),
+    aiConsent: ctx.aiConsent,
     problem: ctx.problem,
     fields: { ...ctx.fields },
     transcript: [...ctx.transcript],

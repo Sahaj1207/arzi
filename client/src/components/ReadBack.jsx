@@ -15,6 +15,7 @@ import { getSpeechProvider } from '../voice/speechProvider.js';
 import { speak, stopSpeaking } from '../voice/tts.js';
 import { startRecording } from '../voice/recorder.js';
 import { getUserId } from '../lib/userId.js';
+import { getRate, setRate, RATE_MIN, RATE_MAX } from '../lib/prefs.js';
 import ArziSays from './ArziSays.jsx';
 import LiveTranscript from './LiveTranscript.jsx';
 import EmergencyPanel from './EmergencyPanel.jsx';
@@ -49,23 +50,66 @@ export default function ReadBack({ doc, onDone, onClose }) {
     setRecording(false);
   };
 
+  // ---- Reading with pause / repeat / speed controls ----
+  const ctrl = useRef({ paused: false, repeat: false, resume: null });
+  const [paused, setPaused] = useState(false);
+  const [rate, setRateState] = useState(getRate());
+
+  const waitWhilePaused = () =>
+    ctrl.current.paused ? new Promise((resolve) => (ctrl.current.resume = resolve)) : null;
+
+  // Reads items one by one. A pause or "repeat" interrupts the current item,
+  // which is then read again from its start.
+  async function readList(items, { l = lang, highlight = false } = {}) {
+    ctrl.current.repeat = false; // a "repeat" tapped during the intro should not repeat point 1
+    for (let i = 0; i < items.length; i++) {
+      await waitWhilePaused();
+      if (signal()?.aborted) return;
+      if (highlight) setCurrent(i);
+      await say(items[i].text, l);
+      if (signal()?.aborted) return;
+      if (ctrl.current.paused || ctrl.current.repeat) {
+        ctrl.current.repeat = false;
+        i -= 1;
+      }
+    }
+    setCurrent(-1);
+  }
+
   async function readPoints() {
     setPhase('reading');
     await say(t(lang, 'readbackIntro'));
-    for (let i = 0; i < lines.length; i++) {
-      if (signal()?.aborted) return;
-      setCurrent(i);
-      await say(`${t(lang, 'point', { n: i + 1 })} ${lines[i]}`);
-    }
-    setCurrent(-1);
+    await readList(lines.map((line, i) => ({ text: `${t(lang, 'point', { n: i + 1 })} ${line}` })), { highlight: true });
   }
 
   async function readEnglish() {
     cancelRecording();
     setPhase('reading');
     await say(t(lang, 'englishIntro'));
-    await say(doc.version.notice, 'en');
+    const paragraphs = doc.version.notice.split(/\n{2,}/).map((p) => ({ text: p.replace(/\n/g, '. ') }));
+    await readList(paragraphs, { l: 'en' });
   }
+
+  const pause = () => {
+    ctrl.current.paused = true;
+    setPaused(true);
+    stopSpeaking();
+  };
+  const resume = () => {
+    ctrl.current.paused = false;
+    setPaused(false);
+    ctrl.current.resume?.();
+    ctrl.current.resume = null;
+  };
+  const repeatPoint = () => {
+    if (ctrl.current.paused) return resume(); // resuming re-reads the current point anyway
+    ctrl.current.repeat = true;
+    stopSpeaking();
+  };
+  const changeSpeed = (delta) => {
+    setRateState(setRate(rate + delta));
+    if (phase === 'reading' && !ctrl.current.paused) repeatPoint(); // hear the new speed now
+  };
 
   async function upload(method, transcript) {
     setPhase('saving');
@@ -142,6 +186,11 @@ export default function ReadBack({ doc, onDone, onClose }) {
   async function run(first = 'points') {
     abortRef.current?.abort();
     abortRef.current = new AbortController();
+    ctrl.current.paused = false; // release a paused reader so it can see the abort
+    ctrl.current.repeat = false;
+    ctrl.current.resume?.();
+    ctrl.current.resume = null;
+    setPaused(false);
     cancelRecording();
     if (first === 'points') await readPoints();
     else await readEnglish();
@@ -178,7 +227,27 @@ export default function ReadBack({ doc, onDone, onClose }) {
         ))}
       </ol>
 
-      <ArziSays text={said} speaking={phase === 'reading'} voiceless={voiceless} />
+      {phase === 'reading' && (
+        <div className="readback-controls" role="group" aria-label="Reading controls">
+          <button type="button" className="btn btn-primary" onClick={paused ? resume : pause}>
+            {paused ? `▶ ${t(lang, 'resume')}` : `❚❚ ${t(lang, 'pause')}`}
+          </button>
+          <button type="button" className="btn" onClick={repeatPoint}>
+            ↻ {t(lang, 'repeatPoint')}
+          </button>
+          <div className="speed">
+            <button type="button" className="btn" onClick={() => changeSpeed(-0.15)} disabled={rate <= RATE_MIN}>
+              {t(lang, 'slower')}
+            </button>
+            <span className="speed-value">{t(lang, 'speed', { n: rate.toFixed(2).replace(/0$/, '') })}</span>
+            <button type="button" className="btn" onClick={() => changeSpeed(0.15)} disabled={rate >= RATE_MAX}>
+              {t(lang, 'faster')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ArziSays text={said} speaking={phase === 'reading' && !paused} voiceless={voiceless} />
       {voice.phase === 'listening' && <LiveTranscript lang={lang} text={voice.interim} listening />}
       {recording && (
         <p className="rec-badge" role="status">

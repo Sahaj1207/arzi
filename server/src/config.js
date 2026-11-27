@@ -27,6 +27,9 @@ export const config = {
   port: int('PORT', 3000),
   dataDir: path.resolve(REPO_ROOT, env('DATA_DIR') ?? 'data'),
   chromiumPath: env('CHROMIUM_PATH'),
+  // 'auto' (Chromium if found), 'chromium', or 'print' (always the browser print-to-PDF
+  // page; for hosts with too little memory for Chromium).
+  pdfEngine: ['auto', 'chromium', 'print'].includes(env('PDF_ENGINE')) ? env('PDF_ENGINE') : 'auto',
   advocatePin: env('ADVOCATE_PIN') ?? '1234',
   // Fictional demo advocate; the notice reads "Reviewed by Advocate R. Mehta (demo)".
   advocateName: env('ADVOCATE_NAME') ?? 'R. Mehta (demo)',
@@ -54,10 +57,14 @@ export function activeProviders() {
 // Safe to send to the browser: names of providers, never keys.
 export function publicConfig(extra = {}) {
   const p = activeProviders();
+  const NAMES = { sarvam: 'Sarvam AI', wispr: 'Wispr Flow', anthropic: 'Anthropic (Claude)' };
+  // Outside services that would receive the citizen's voice or words (for the consent question).
+  const aiProviders = [...new Set([p.speech, p.tts, p.drafting].filter((x) => NAMES[x]).map((x) => NAMES[x]))];
   return {
     speech: p.speech,
     tts: p.tts,
     mode: p.drafting === 'demo' ? 'demo' : 'ai',
+    aiProviders,
     advocateName: config.advocateName,
     ...extra,
   };

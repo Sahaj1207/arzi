@@ -1,0 +1,42 @@
+// What the sample citizen "says" in the scripted interview, per language.
+// Same story as the server's sample (server/src/demo/sample.js): Priya Sharma,
+// ₹25,000 deposit, PG in Kothrud, Pune. Each line answers the next question;
+// "yes" lines confirm the read-back of the answer before them.
+export const SAMPLE_SCRIPT = {
+  en: [
+    'I left my PG two months ago but the owner has not returned my security deposit',
+    'yes',
+    'My name is Priya Sharma', 'yes',
+    'Room 12, Shanti PG, Kothrud, Pune 411038', 'yes',
+    'Rajesh Gupta', 'yes',
+    '8 Paud Road, Kothrud, Pune 411038', 'yes',
+    'twenty five thousand rupees', 'yes',
+    '15 September 2026', 'yes',
+    '30 September 2026', 'yes',
+    'yes, everything is correct',
+  ],
+  hi: [
+    'मैंने दो महीने पहले पीजी छोड़ दिया लेकिन मालिक ने मेरा सिक्योरिटी डिपॉज़िट वापस नहीं किया',
+    'हाँ',
+    'मेरा नाम प्रिया शर्मा है', 'हाँ',
+    'कमरा 12, शांति पीजी, कोथरूड, पुणे 411038', 'हाँ',
+    'राजेश गुप्ता', 'हाँ',
+    '8 पौड रोड, कोथरूड, पुणे 411038', 'हाँ',
+    'पच्चीस हज़ार रुपये', 'हाँ',
+    '15 सितंबर 2026', 'हाँ',
+    '30 सितंबर 2026', 'हाँ',
+    'हाँ, सब सही है',
+  ],
+  mr: [
+    'मी दोन महिन्यांपूर्वी पीजी सोडली पण मालकाने माझी अनामत रक्कम परत दिली नाही',
+    'हो',
+    'माझे नाव प्रिया शर्मा आहे', 'हो',
+    'खोली 12, शांती पीजी, कोथरूड, पुणे 411038', 'हो',
+    'राजेश गुप्ता', 'हो',
+    '8 पौड रोड, कोथरूड, पुणे 411038', 'हो',
+    'पंचवीस हजार रुपये', 'हो',
+    '15 सप्टेंबर 2026', 'हो',
+    '30 सप्टेंबर 2026', 'हो',
+    'हो, सगळे बरोबर आहे',
+  ],
+};

@@ -39,8 +39,8 @@ const ensureUser = db.prepare('INSERT OR IGNORE INTO users (id) VALUES (?)');
 
 // ---------- queries ----------
 const insertDoc = db.prepare(`
-  INSERT INTO documents (id, user_id, kind, language, status, transcript, fields_json)
-  VALUES (@id, @userId, @kind, @lang, @status, @transcript, @fields)`);
+  INSERT INTO documents (id, user_id, kind, language, status, transcript, fields_json, is_sample)
+  VALUES (@id, @userId, @kind, @lang, @status, @transcript, @fields, @isSample)`);
 const insertVersion = db.prepare(`
   INSERT INTO versions (document_id, version_no, notice_text, summary_text, author)
   VALUES (?, ?, ?, ?, ?)`);
@@ -95,6 +95,7 @@ export function serializeDocument(row, { withVersion = true, raw = false, versio
     fields: JSON.parse(row.fields_json || '{}'),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    isSample: row.is_sample === 1,
   };
   if (withVersion) {
     const v = latestVersion.get(row.id);
@@ -115,36 +116,49 @@ export function serializeDocument(row, { withVersion = true, raw = false, versio
 
 export const getDocumentRow = (id) => getDoc.get(id);
 
+// Saves a new notice (fields already validated) and drafts version 1.
+// Used by the interview, the sample case and the startup seed.
+export async function createDocument({ id = randomUUID(), userId, lang, problem = '', transcript = [], fields, isSample = false, meta = {} }) {
+  const clean = Object.fromEntries(FIELDS.map((f) => [f.id, fields[f.id]]));
+  const draft = await draftDocument({ fields: clean, lang });
+  db.transaction(() => {
+    ensureUser.run(userId);
+    insertDoc.run({
+      id,
+      userId,
+      kind: 'deposit_notice',
+      lang,
+      status: 'pending_review',
+      transcript: JSON.stringify({ problem: String(problem).slice(0, 4000), entries: cleanTranscript(transcript), ...meta }),
+      fields: JSON.stringify(clean),
+      isSample: isSample ? 1 : 0,
+    });
+    insertVersion.run(id, 1, draft.notice, draft.summary, 'system');
+  })();
+  return getDoc.get(id);
+}
+
 // ---------- routes ----------
 documentsRouter.post('/', async (req, res, next) => {
   try {
-    const { userId, lang, problem = '', transcript, fields } = req.body ?? {};
+    const { userId, lang, problem = '', transcript, fields, sample = false, aiConsent = null } = req.body ?? {};
     if (!USER_ID.test(userId ?? '')) return bad(res, 'invalid_user');
     if (!LANG_CODES.has(lang)) return bad(res, 'invalid_language');
     if (!fields || typeof fields !== 'object') return bad(res, 'missing_fields');
     for (const f of FIELDS) {
       if (!isValidFieldValue(f, fields[f.id])) return bad(res, `invalid_field:${f.id}`);
     }
-    // Keep only known fields.
-    const clean = Object.fromEntries(FIELDS.map((f) => [f.id, fields[f.id]]));
-
-    const draft = await draftDocument({ fields: clean, lang });
-    const id = randomUUID();
-    db.transaction(() => {
-      ensureUser.run(userId);
-      insertDoc.run({
-        id,
-        userId,
-        kind: 'deposit_notice',
-        lang,
-        status: 'pending_review',
-        transcript: JSON.stringify({ problem: String(problem).slice(0, 4000), entries: cleanTranscript(transcript) }),
-        fields: JSON.stringify(clean),
-      });
-      insertVersion.run(id, 1, draft.notice, draft.summary, 'system');
-    })();
-
-    res.status(201).json(serializeDocument(getDoc.get(id)));
+    const row = await createDocument({
+      userId,
+      lang,
+      problem,
+      transcript,
+      fields,
+      isSample: sample === true,
+      // Whether the citizen allowed outside AI services this session (null = never asked: no keys).
+      meta: { aiConsent: typeof aiConsent === 'boolean' ? aiConsent : null },
+    });
+    res.status(201).json(serializeDocument(row));
   } catch (err) {
     next(err);
   }
@@ -255,6 +269,7 @@ notesRouter.post('/', (req, res) => {
       status: 'noted',
       transcript: JSON.stringify({ problem: String(problem).slice(0, 4000), entries: cleanTranscript(transcript) }),
       fields: '{}',
+      isSample: 0,
     });
   })();
   res.status(201).json({ id, status: 'noted' });

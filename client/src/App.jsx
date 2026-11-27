@@ -49,12 +49,12 @@ export default function App() {
       </header>
 
       <Routes>
-        <Route path="/" element={<Home lang={lang} setLang={setLang} />} />
+        <Route path="/" element={<Home lang={lang} setLang={setLang} config={config} />} />
         <Route path="/documents/:id" element={<DocumentStatus lang={lang} />} />
         <Route path="/history" element={<History lang={lang} />} />
         <Route path="/advocate" element={<Advocate />} />
         <Route path="/advocate/:id" element={<Advocate />} />
-        <Route path="*" element={<Home lang={lang} setLang={setLang} />} />
+        <Route path="*" element={<Home lang={lang} setLang={setLang} config={config} />} />
       </Routes>
 
       <footer className="footer">{t(lang, 'notLegalAdvice')}</footer>

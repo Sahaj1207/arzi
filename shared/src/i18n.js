@@ -352,6 +352,62 @@ const HISTORY = {
 };
 for (const lang of Object.keys(HISTORY)) Object.assign(STRINGS[lang], HISTORY[lang]);
 
+// Sample case, AI consent and read-back controls (before the Render deploy).
+const DEMO = {
+  en: {
+    trySample: 'Try a sample case',
+    trySampleHelp: 'Watch Arzi take a sample case by voice. No microphone needed.',
+    skipToApproved: 'Skip to an approved document',
+    sampleBanner: 'Sample case: the answers are typed in automatically, as if spoken.',
+    demoAdvocateChecking: 'The demo advocate is checking this sample case…',
+    aiConsentAsk:
+      'Before we start: to understand you better, Arzi can send your voice and words to {providers}, an outside AI service. Is that okay? Say yes or no.',
+    aiConsentYes: 'Thank you.',
+    aiConsentNo: 'Okay. I will not use any outside AI service.',
+    pause: 'Pause',
+    resume: 'Continue',
+    repeatPoint: 'Repeat this point',
+    slower: 'Slower',
+    faster: 'Faster',
+    speed: 'Speed {n}×',
+  },
+  hi: {
+    trySample: 'एक नमूना केस आज़माइए',
+    trySampleHelp: 'देखिए अर्ज़ी आवाज़ से एक नमूना केस कैसे लेती है। माइक की ज़रूरत नहीं।',
+    skipToApproved: 'सीधे मंज़ूर दस्तावेज़ पर जाइए',
+    sampleBanner: 'नमूना केस: जवाब अपने आप लिखे जा रहे हैं, जैसे बोले गए हों।',
+    demoAdvocateChecking: 'डेमो वकील इस नमूना केस को जाँच रहे हैं…',
+    aiConsentAsk:
+      'शुरू करने से पहले: आपको बेहतर समझने के लिए अर्ज़ी आपकी आवाज़ और बातें {providers} नाम की बाहरी AI सेवा को भेज सकती है। क्या यह ठीक है? हाँ या ना बोलिए।',
+    aiConsentYes: 'धन्यवाद।',
+    aiConsentNo: 'ठीक है। मैं किसी बाहरी AI सेवा का उपयोग नहीं करूँगी।',
+    pause: 'रोकिए',
+    resume: 'आगे सुनिए',
+    repeatPoint: 'यह बिंदु फिर से',
+    slower: 'धीरे',
+    faster: 'तेज़',
+    speed: 'गति {n}×',
+  },
+  mr: {
+    trySample: 'एक नमुना केस करून पाहा',
+    trySampleHelp: 'अर्ज़ी आवाजाने नमुना केस कशी घेते ते पाहा. माइकची गरज नाही.',
+    skipToApproved: 'थेट मंजूर कागदपत्रावर जा',
+    sampleBanner: 'नमुना केस: उत्तरे आपोआप लिहिली जात आहेत, जणू बोलली गेली आहेत.',
+    demoAdvocateChecking: 'डेमो वकील ही नमुना केस तपासत आहेत…',
+    aiConsentAsk:
+      'सुरू करण्यापूर्वी: तुम्हाला अधिक चांगले समजण्यासाठी अर्ज़ी तुमचा आवाज आणि बोलणे {providers} या बाहेरील AI सेवेला पाठवू शकते. हे चालेल का? हो किंवा नाही म्हणा.',
+    aiConsentYes: 'धन्यवाद.',
+    aiConsentNo: 'ठीक आहे. मी कोणतीही बाहेरील AI सेवा वापरणार नाही.',
+    pause: 'थांबा',
+    resume: 'पुढे ऐका',
+    repeatPoint: 'हा मुद्दा पुन्हा',
+    slower: 'हळू',
+    faster: 'जलद',
+    speed: 'वेग {n}×',
+  },
+};
+for (const lang of Object.keys(DEMO)) Object.assign(STRINGS[lang], DEMO[lang]);
+
 // t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.
 export function t(lang, key, vars) {
   const s = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;

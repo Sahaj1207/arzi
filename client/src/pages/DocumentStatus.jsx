@@ -2,7 +2,7 @@
 // their details. Polls the server every 5 s so the status changes by itself
 // when the advocate approves or asks for changes, and says the news aloud.
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { t } from '@arzi/shared';
 import { api } from '../lib/api.js';
 import { getUserId } from '../lib/userId.js';
@@ -23,6 +23,33 @@ export default function DocumentStatus({ lang }) {
   const [fixing, setFixing] = useState(false);
   const [reading, setReading] = useState(false);
   const lastStatus = useRef(null);
+  const demo = useLocation().state ?? {}; // { sample } or { autoReadBack } from the home screen
+  const demoDone = useRef(false);
+  const demoTimer = useRef(null);
+  useEffect(() => () => clearTimeout(demoTimer.current), []); // only on leaving the page
+
+  // Sample case: the demo advocate approves it after a short, visible pause, then the
+  // read-back starts by itself. "Skip to an approved document" opens the read-back directly.
+  useEffect(() => {
+    if (!doc || demoDone.current) return;
+    if (demo.sample && doc.status === 'pending_review') {
+      demoDone.current = true;
+      demoTimer.current = setTimeout(async () => {
+        const r = await api(`/documents/${doc.id}/demo-approve?userId=${encodeURIComponent(getUserId())}`, { method: 'POST' });
+        if (r.ok) {
+          lastStatus.current = r.data.status; // the read-back speaks next, not the announcement
+          setDoc(r.data);
+          setReading(true);
+        }
+      }, 3500);
+      return;
+    }
+    if (demo.autoReadBack && doc.status === 'approved') {
+      demoDone.current = true;
+      lastStatus.current = doc.status;
+      setReading(true);
+    }
+  }, [doc, demo.sample, demo.autoReadBack]);
 
   useEffect(() => {
     let stopped = false;
@@ -37,7 +64,7 @@ export default function DocumentStatus({ lang }) {
         if (r.data.status !== lastStatus.current) {
           lastStatus.current = r.data.status;
           const key = SPOKEN[r.data.status];
-          if (key) speak(t(r.data.language, key), r.data.language);
+          if (key && !demo.autoReadBack) speak(t(r.data.language, key), r.data.language);
         }
       } else {
         setError(r.status === 404 ? 'notFound' : 'offline');
@@ -73,7 +100,9 @@ export default function DocumentStatus({ lang }) {
         <span className="status-dot" aria-hidden="true" />
         <span>{t(dl, `status_${doc.status}`)}</span>
       </div>
-      {doc.status === 'pending_review' && <p className="muted">{t(dl, 'autoUpdate')}</p>}
+      {doc.status === 'pending_review' && (
+        <p className="muted">{t(dl, demo.sample ? 'demoAdvocateChecking' : 'autoUpdate')}</p>
+      )}
       {error === 'offline' && <p className="muted">{t(dl, 'offline')}</p>}
 
       {doc.status === 'changes_requested' && lastNote && (

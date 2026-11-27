@@ -74,3 +74,7 @@ if (!hasColumn('documents', 'share_token')) {
   db.exec('ALTER TABLE documents ADD COLUMN share_token TEXT');
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS documents_share_token ON documents(share_token)');
 }
+if (!hasColumn('documents', 'is_sample')) {
+  // 1 = made by "Try a sample case" or the startup seed (demo advocate may auto-approve it).
+  db.exec('ALTER TABLE documents ADD COLUMN is_sample INTEGER NOT NULL DEFAULT 0');
+}
