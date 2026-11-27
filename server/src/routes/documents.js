@@ -118,9 +118,10 @@ export const getDocumentRow = (id) => getDoc.get(id);
 
 // Saves a new notice (fields already validated) and drafts version 1.
 // Used by the interview, the sample case and the startup seed.
-export async function createDocument({ id = randomUUID(), userId, lang, problem = '', transcript = [], fields, isSample = false, meta = {} }) {
+// ai: { userId, ip } when the citizen agreed to AI services (enables name transliteration).
+export async function createDocument({ id = randomUUID(), userId, lang, problem = '', transcript = [], fields, isSample = false, meta = {}, ai = null }) {
   const clean = Object.fromEntries(FIELDS.map((f) => [f.id, fields[f.id]]));
-  const draft = await draftDocument({ fields: clean, lang });
+  const draft = await draftDocument({ fields: clean, lang, ai });
   db.transaction(() => {
     ensureUser.run(userId);
     insertDoc.run({
@@ -157,6 +158,7 @@ documentsRouter.post('/', async (req, res, next) => {
       isSample: sample === true,
       // Whether the citizen allowed outside AI services this session (null = never asked: no keys).
       meta: { aiConsent: typeof aiConsent === 'boolean' ? aiConsent : null },
+      ai: aiConsent === true && sample !== true ? { userId, ip: req.ip } : null,
     });
     res.status(201).json(serializeDocument(row));
   } catch (err) {
@@ -191,7 +193,8 @@ documentsRouter.post('/:id/revise', async (req, res, next) => {
       if (!isValidFieldValue(f, fields[f.id])) return bad(res, `invalid_field:${f.id}`);
     }
     const clean = Object.fromEntries(FIELDS.map((f) => [f.id, fields[f.id]]));
-    const draft = await draftDocument({ fields: clean, lang: row.language });
+    const ai = JSON.parse(row.transcript || '{}').aiConsent === true ? { userId, ip: req.ip } : null;
+    const draft = await draftDocument({ fields: clean, lang: row.language, ai });
 
     const stored = JSON.parse(row.transcript || '{}');
     stored.entries = [...(stored.entries ?? []), ...cleanTranscript(transcript)].slice(-400);

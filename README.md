@@ -43,11 +43,18 @@ If an AI key is set, Arzi asks once per session before anything is sent to an ou
 
 ## Demo mode vs AI mode
 
-| | Demo mode (default, no keys) | With keys (optional) |
+| | Demo mode (default, no keys) | AI mode (`SARVAM_API_KEY` set, and the citizen agrees) |
 |---|---|---|
-| Speech-to-text | Browser Web Speech API | Sarvam AI (`SARVAM_API_KEY`) or Wispr Flow (`WISPR_API_KEY`, adapter untested) |
-| Voice read-back | Browser speech synthesis | Sarvam text-to-speech |
-| Drafting | Keyword detection + legal-notice template | LLM via Anthropic or Sarvam (badge shows "AI mode") |
+| Speech-to-text | Browser Web Speech API | Sarvam `saaras:v4` (record → upload; handles code-mixed speech) |
+| Voice | Browser speech synthesis | Sarvam `bulbul:v3`, only when the browser has no voice for the language (often Telugu) |
+| Understanding answers | Built-in parsers + keywords | Same, plus Sarvam `sarvam-105b-conversations` for answers the parsers cannot read. The AI only *proposes* a value: Arzi still reads it back and the citizen must confirm it. |
+| Notice | Legal template | Same template; names and addresses spoken in Hindi/Marathi/Telugu script are transliterated into English letters for the English notice (summary keeps the original script) |
+
+**Consent first:** with a key set, Arzi asks once per session, before anything is sent: "…can send your voice and words to Sarvam AI, an outside AI service. Is that okay?" Saying no keeps the whole session on free browser speech.
+
+**Never stuck:** if Sarvam errors, times out or runs out of credits, the session switches to browser speech by itself and asks the question again; the footer shows the switch. Paid calls are capped per user and per IP per day (`PAID_CALLS_PER_*`).
+
+Wispr Flow (approval-only) and Anthropic are planned but not wired up yet; their keys are ignored.
 
 All keys are optional and read only by the backend. See [`.env.example`](.env.example). If a paid provider fails or runs out of credits, Arzi falls back to browser speech automatically.
 

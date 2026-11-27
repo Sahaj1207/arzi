@@ -137,7 +137,7 @@ export function useInterview({ lang, setLang }) {
               useKeyboard = false;
               break;
             }
-            const value = parse(input.typed);
+            const value = await parse(input.typed);
             if (value !== null && value !== undefined) {
               patch({ phase: 'idle', kbError: null });
               return { status: 'answer', text: input.typed, value, via: 'keyboard' };

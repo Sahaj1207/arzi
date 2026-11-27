@@ -70,6 +70,13 @@ export async function ask({
 
     if (heard.status === 'aborted') return { status: 'aborted' };
 
+    // The paid speech service failed and the session switched to browser speech:
+    // ask the same question again (not counted as a failed attempt).
+    if (heard.status === 'switched') {
+      say = prompt;
+      continue;
+    }
+
     if (HARD_FAILURES[heard.status]) {
       onState({ phase: 'keyboard', messageKey: HARD_FAILURES[heard.status] });
       return { status: 'keyboard', reason: HARD_FAILURES[heard.status] };
@@ -87,7 +94,7 @@ export async function ask({
 
     if (heard.status === 'ok') {
       onState({ phase: 'thinking', interim: heard.text });
-      const value = parse(heard.text);
+      const value = await parse(heard.text); // may ask the AI (async)
       if (value !== null && value !== undefined) return { status: 'answer', text: heard.text, value };
       const out = fail('notUnderstood');
       if (out) {

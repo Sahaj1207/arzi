@@ -17,6 +17,7 @@ import { runInterview } from '../conversation/interview.js';
 import { createScriptedProvider } from '../demo/scriptedProvider.js';
 import { SAMPLE_SCRIPT } from '../demo/sampleScript.js';
 import { getAiConsent, setAiConsent, isLanguageVisible } from '../lib/prefs.js';
+import { aiExtract, aiIntent } from '../lib/ai.js';
 import { hasSpeechRecognition, isSecureForMic } from '../voice/support.js';
 
 // Sample case pacing: Arzi's lines are shown (not spoken) just long enough to
@@ -51,7 +52,11 @@ export default function Home({ lang, setLang, config }) {
     const aiAvailable = (config?.aiProviders?.length ?? 0) > 0;
     const askAiConsent = aiAvailable && getAiConsent() === null;
     start((io) =>
-      runInterview({ ...io, onAiConsent: setAiConsent }, { askAiConsent, aiProviders: config?.aiProviders?.join(' / ') }),
+      runInterview(
+        { ...io, onAiConsent: setAiConsent },
+        // The AI helpers check consent themselves, so they do nothing until the citizen says yes.
+        { askAiConsent, aiProviders: config?.aiProviders?.join(' / '), aiExtract, aiIntent },
+      ),
     );
   };
 

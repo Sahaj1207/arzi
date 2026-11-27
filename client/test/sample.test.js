@@ -23,7 +23,7 @@ function scriptedIo(lang, answers) {
       io.asked.push(prompt);
       const heard = await provider.listen({});
       if (heard.status !== 'ok') return { status: 'aborted' };
-      const value = parse(heard.text);
+      const value = await parse(heard.text);
       if (value === null) {
         io.rejected++;
         return { status: 'aborted' };

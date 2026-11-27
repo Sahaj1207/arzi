@@ -4,6 +4,9 @@
 import { getLanguage } from '@arzi/shared';
 import { hasSpeechSynthesis } from './support.js';
 import { getRate } from '../lib/prefs.js';
+import { api } from '../lib/api.js';
+import { getUserId } from '../lib/userId.js';
+import { getRuntimeConfig, aiServiceUp, markAiFailed } from '../lib/ai.js';
 
 // Voices load asynchronously; start loading as soon as this file is imported.
 if (hasSpeechSynthesis()) speechSynthesis.getVoices();
@@ -30,11 +33,40 @@ export function pickVoice(voices, speechTag) {
   return best ?? null;
 }
 
+// ---- Sarvam voice (bulbul:v3), used only when the browser has no voice for
+// the language (common for Telugu, and Hindi/Marathi on some desktops), the
+// server has a key and the citizen agreed to AI. Failure → text highlight.
+let currentAudio = null;
+
+async function speakWithSarvam(text, langCode, rate) {
+  const r = await api('/ai/tts', { method: 'POST', body: { userId: getUserId(), lang: langCode, text, aiConsent: 'yes' } });
+  if (!r.ok) {
+    markAiFailed('tts', r.error);
+    return { spoken: false };
+  }
+  for (const clip of r.data.audios) {
+    const ok = await new Promise((resolve) => {
+      const audio = new Audio(`data:audio/wav;base64,${clip}`);
+      audio.playbackRate = Math.min(1.3, Math.max(0.7, rate / 0.92));
+      currentAudio = audio;
+      audio.onended = () => resolve(true);
+      audio.onpause = () => resolve(audio.ended); // stopSpeaking() pauses
+      audio.onerror = () => resolve(false);
+      audio.play().catch(() => resolve(false));
+    });
+    // Stopped on purpose (stopSpeaking cleared currentAudio) counts as spoken; a playback error does not.
+    if (!ok) return { spoken: currentAudio === null };
+  }
+  currentAudio = null;
+  return { spoken: true };
+}
+
+const sarvamVoiceAllowed = () => getRuntimeConfig()?.tts === 'sarvam' && aiServiceUp('tts');
+
 export async function speak(text, langCode, { rate = getRate() } = {}) {
-  if (!hasSpeechSynthesis()) return { spoken: false };
   const { speechTag } = getLanguage(langCode);
-  const voice = pickVoice(await loadVoices(), speechTag);
-  if (!voice) return { spoken: false };
+  const voice = hasSpeechSynthesis() ? pickVoice(await loadVoices(), speechTag) : null;
+  if (!voice) return sarvamVoiceAllowed() ? speakWithSarvam(text, langCode, rate) : { spoken: false };
 
   speechSynthesis.cancel();
   return new Promise((resolve) => {
@@ -76,4 +108,7 @@ export async function speak(text, langCode, { rate = getRate() } = {}) {
 
 export function stopSpeaking() {
   if (hasSpeechSynthesis()) speechSynthesis.cancel();
+  const a = currentAudio;
+  currentAudio = null;
+  a?.pause();
 }

@@ -8,6 +8,7 @@ import { getUserId } from '../lib/userId.js';
 import { speak } from '../voice/tts.js';
 import { useInterview } from '../conversation/useInterview.js';
 import { runCorrection } from '../conversation/interview.js';
+import { aiExtract } from '../lib/ai.js';
 import InterviewView from './InterviewView.jsx';
 import EmergencyPanel from './EmergencyPanel.jsx';
 
@@ -18,7 +19,7 @@ export default function FixDetails({ doc, note, onDone, onCancel }) {
 
   // Started by the "Fix my details" tap, so the browser allows speech.
   useEffect(() => {
-    start((io) => runCorrection(io, { fields: doc.fields, note }));
+    start((io) => runCorrection(io, { fields: doc.fields, note, aiExtract }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

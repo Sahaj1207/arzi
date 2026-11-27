@@ -6,6 +6,7 @@ import { api } from './lib/api.js';
 import { getUserId, getSavedLanguage, saveLanguage, detectLanguage } from './lib/userId.js';
 import ModeBadges from './components/ModeBadges.jsx';
 import { readReviewFlagFromUrl, isLanguageVisible } from './lib/prefs.js';
+import { setRuntimeConfig } from './lib/ai.js';
 import Home from './pages/Home.jsx';
 import DocumentStatus from './pages/DocumentStatus.jsx';
 import Advocate from './pages/Advocate.jsx';
@@ -24,7 +25,11 @@ export default function App() {
 
   useEffect(() => {
     getUserId(); // make sure this device has an anonymous ID
-    api('/config').then((r) => r.ok && setConfig(r.data));
+    api('/config').then((r) => {
+      if (!r.ok) return;
+      setRuntimeConfig(r.data); // voice code reads which paid services exist
+      setConfig(r.data);
+    });
   }, []);
 
   useEffect(() => {

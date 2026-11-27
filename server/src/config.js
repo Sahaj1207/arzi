@@ -38,19 +38,22 @@ export const config = {
     wispr: env('WISPR_API_KEY'),
     anthropic: env('ANTHROPIC_API_KEY'),
   },
+  // One interview is roughly 20 speech calls + a few voice/AI calls.
   limits: {
-    perUserPerDay: int('PAID_CALLS_PER_USER_PER_DAY', 40),
-    perIpPerDay: int('PAID_CALLS_PER_IP_PER_DAY', 120),
+    perUserPerDay: int('PAID_CALLS_PER_USER_PER_DAY', 150),
+    perIpPerDay: int('PAID_CALLS_PER_IP_PER_DAY', 500),
   },
 };
 
 // Which provider is active for each job, based only on which keys are present.
 export function activeProviders() {
-  const { sarvam, wispr, anthropic } = config.keys;
+  // Only providers that are actually implemented are reported. Wispr Flow
+  // (approval-only) and Anthropic are not wired up yet, so their keys are ignored.
+  const { sarvam } = config.keys;
   return {
-    speech: wispr ? 'wispr' : sarvam ? 'sarvam' : 'browser',
+    speech: sarvam ? 'sarvam' : 'browser',
     tts: sarvam ? 'sarvam' : 'browser',
-    drafting: anthropic ? 'anthropic' : sarvam ? 'sarvam' : 'demo',
+    drafting: sarvam ? 'sarvam' : 'demo',
   };
 }
 

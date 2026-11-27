@@ -22,7 +22,7 @@ function fakeIo(answers, lang = 'en') {
       for (;;) {
         if (queue.length === 0) return { status: 'aborted' };
         const text = queue.shift();
-        const value = parse(text);
+        const value = await parse(text);
         if (value !== null) return { status: 'answer', text, value, via: keyboard ? 'keyboard' : 'voice' };
       }
     },

@@ -9,6 +9,7 @@ import { documentsRouter, notesRouter } from './routes/documents.js';
 import { advocateRouter } from './routes/advocate.js';
 import { filesRouter, sharedRouter } from './routes/files.js';
 import { demoRouter, demoApproveHandler } from './demo/sample.js';
+import { aiRouter } from './routes/ai.js';
 import { findChromium } from './pdf/render.js';
 
 export function createApp() {
@@ -30,6 +31,7 @@ export function createApp() {
   app.use('/api/documents', filesRouter);
   app.post('/api/documents/:id/demo-approve', demoApproveHandler);
   app.use('/api/demo', demoRouter);
+  app.use('/api/ai', aiRouter);
   app.use('/api/shared', sharedRouter);
   app.use('/api/notes', notesRouter);
   app.use('/api/advocate', advocateRouter);

@@ -81,7 +81,9 @@ export async function runCorrection(io, { fields, note = '', ...opts }) {
   });
 }
 
-function createSession(io, { today = new Date() } = {}) {
+// aiExtract(field, text, lang) / aiIntent(text, lang): optional AI helpers, only
+// passed in when the citizen agreed to AI. They may return null.
+function createSession(io, { today = new Date(), aiExtract = null, aiIntent = null } = {}) {
   const ctx = { problem: '', fields: {}, transcript: [], outcome: null, aiConsent: null };
   const L = () => io.getLang();
   const result = (outcome, extra = {}) => ({
@@ -102,11 +104,11 @@ function createSession(io, { today = new Date() } = {}) {
       const r = await io.ask({
         prompt,
         keyboard,
-        parse: (text) => {
+        parse: async (text) => {
           if (isEmergency(text)) return { emergency: true };
           const lang = detectLanguageSwitch(text);
           if (lang && lang !== L()) return { switchTo: lang };
-          const v = parse(text);
+          const v = await parse(text);
           return v === null || v === undefined ? null : { value: v };
         },
       });
@@ -135,7 +137,11 @@ function createSession(io, { today = new Date() } = {}) {
       const lead = (lang) => (rejections === 0 ? '' : `${t(lang, typing ? 'pleaseType' : 'sayAgain')} `);
       const { value } = await q(
         (lang) => lead(lang) + field.question[lang],
-        (text) => parseFieldAnswer(field, text, { today, fields: ctx.fields }),
+        // Built-in parser first; if it cannot read the answer and AI is allowed,
+        // ask the AI. Either way the value is read back and must be confirmed.
+        async (text) =>
+          parseFieldAnswer(field, text, { today, fields: ctx.fields }) ??
+          (aiExtract ? await aiExtract(field, text, L()) : null),
         { keyboard: typing },
       );
 
@@ -176,7 +182,15 @@ function createSession(io, { today = new Date() } = {}) {
       ctx.problem = ctx.problem ? `${ctx.problem} ${text}` : text;
       io.update({ problem: ctx.problem });
 
-      if (detectIntent(text).intent !== 'deposit') {
+      let intent = detectIntent(text).intent;
+      // Keywords missed it? With AI allowed, ask the AI before saying "not a deposit problem".
+      if (intent === 'other' && aiIntent) intent = (await aiIntent(text, L())) ?? intent;
+      if (intent === 'emergency') {
+        io.update({ emergency: true });
+        await io.say(t(L(), 'emergency'));
+        throw new Stop(result('emergency'));
+      }
+      if (intent !== 'deposit') {
         ctx.outcome = await notDeposit();
         return;
       }
