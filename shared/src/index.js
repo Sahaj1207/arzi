@@ -8,3 +8,5 @@ export { extractNumbers } from './parse/numbers.js';
 export { parseAmount, MAX_AMOUNT } from './parse/amount.js';
 export { parseDate, parseDuration, parsePending } from './parse/date.js';
 export { parseYesNo } from './parse/yesno.js';
+export { extractName, extractAddress } from './parse/name.js';
+export * from './fieldValues.js';

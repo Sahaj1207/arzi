@@ -81,6 +81,92 @@ const STRINGS = {
   },
 };
 
-export function t(lang, key) {
-  return STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;
+// Lines used by the interview (step 4).
+const INTERVIEW = {
+  en: {
+    confirmDeposit:
+      'Your landlord has not returned your deposit. I will make a legal notice. Is that right? Say yes or no.',
+    describeAgain: 'Okay. Please tell me your problem again, in your own words.',
+    wrongRequest:
+      'Sorry, right now Arzi can only make a legal notice for a security deposit that was not returned.',
+    offerNote: 'Shall I note your problem so an advocate can look at it? Say yes or no.',
+    noted: 'I have noted your problem. An advocate will look at it. Thank you.',
+    notNoted: 'Okay. Thank you for using Arzi.',
+    emergency: 'This sounds like an emergency. Please call 112 right now. I have stopped making the notice.',
+    emergencyTitle: 'Emergency? Call 112',
+    emergencyBody: 'If you are in danger or someone has hurt you, call 112 now. Arzi has stopped making the notice.',
+    callNow: 'Call 112',
+    confirmHeard: 'I heard: {value}. Is that right? Say yes or no.',
+    sayAgain: 'Okay, please say it again.',
+    pleaseType: 'Please type it, so I get it exactly right.',
+    summaryIntro: 'Here is what I have noted.',
+    summaryAsk: 'Is everything correct? Say yes, or tell me what to change, for example: change the amount.',
+    whichField: 'Which detail should I change? For example, say: the amount, or the landlord’s name.',
+    allSet: 'Thank you. Everything is ready. I will now prepare your legal notice.',
+    languageChanged: 'Okay, I will speak in English.',
+    startOver: 'Start again',
+    readyTitle: 'Details confirmed',
+    otherTitle: 'Not a deposit problem',
+    step: 'Question {n} of {total}',
+    sameAsAbove: '(same as rented place)',
+  },
+  hi: {
+    confirmDeposit:
+      'आपके मकान मालिक ने आपका डिपॉज़िट वापस नहीं किया है। मैं एक लीगल नोटिस बनाऊँगी। क्या यह सही है? हाँ या ना बोलिए।',
+    describeAgain: 'ठीक है। कृपया अपनी समस्या फिर से अपने शब्दों में बताइए।',
+    wrongRequest: 'माफ़ कीजिए, अभी अर्ज़ी सिर्फ़ वापस न किए गए सिक्योरिटी डिपॉज़िट का लीगल नोटिस बना सकती है।',
+    offerNote: 'क्या मैं आपकी समस्या लिख लूँ ताकि कोई वकील उसे देख सके? हाँ या ना बोलिए।',
+    noted: 'मैंने आपकी समस्या लिख ली है। एक वकील उसे देखेंगे। धन्यवाद।',
+    notNoted: 'ठीक है। अर्ज़ी का उपयोग करने के लिए धन्यवाद।',
+    emergency: 'यह आपातकाल लगता है। कृपया अभी 112 पर कॉल कीजिए। मैंने नोटिस बनाना रोक दिया है।',
+    emergencyTitle: 'आपातकाल? 112 पर कॉल करें',
+    emergencyBody: 'अगर आप खतरे में हैं या किसी ने आपको चोट पहुँचाई है, तो अभी 112 पर कॉल कीजिए। अर्ज़ी ने नोटिस बनाना रोक दिया है।',
+    callNow: '112 पर कॉल करें',
+    confirmHeard: 'मैंने सुना: {value}। क्या यह सही है? हाँ या ना बोलिए।',
+    sayAgain: 'ठीक है, कृपया फिर से बोलिए।',
+    pleaseType: 'कृपया इसे लिख दीजिए, ताकि मैं बिल्कुल सही लिखूँ।',
+    summaryIntro: 'मैंने यह जानकारी लिखी है।',
+    summaryAsk: 'क्या सब कुछ सही है? हाँ बोलिए, या बताइए क्या बदलना है, जैसे: रकम बदलो।',
+    whichField: 'कौन सी जानकारी बदलनी है? जैसे बोलिए: रकम, या मकान मालिक का नाम।',
+    allSet: 'धन्यवाद। सारी जानकारी तैयार है। अब मैं आपका लीगल नोटिस तैयार करूँगी।',
+    languageChanged: 'ठीक है, अब मैं हिंदी में बात करूँगी।',
+    startOver: 'फिर से शुरू करें',
+    readyTitle: 'जानकारी पक्की हुई',
+    otherTitle: 'यह डिपॉज़िट की समस्या नहीं है',
+    step: 'सवाल {n} / {total}',
+    sameAsAbove: '(किराए वाले घर का ही पता)',
+  },
+  mr: {
+    confirmDeposit:
+      'तुमच्या घरमालकाने तुमची अनामत रक्कम परत केलेली नाही. मी एक कायदेशीर नोटीस तयार करेन. हे बरोबर आहे का? हो किंवा नाही म्हणा.',
+    describeAgain: 'ठीक आहे. कृपया तुमची अडचण पुन्हा तुमच्या शब्दांत सांगा.',
+    wrongRequest: 'माफ करा, सध्या अर्ज़ी फक्त परत न केलेल्या अनामत रकमेसाठी कायदेशीर नोटीस तयार करू शकते.',
+    offerNote: 'वकिलांनी पाहावी म्हणून मी तुमची अडचण नोंदवून ठेवू का? हो किंवा नाही म्हणा.',
+    noted: 'मी तुमची अडचण नोंदवली आहे. एक वकील ती पाहतील. धन्यवाद.',
+    notNoted: 'ठीक आहे. अर्ज़ी वापरल्याबद्दल धन्यवाद.',
+    emergency: 'ही आणीबाणी वाटते. कृपया आत्ताच 112 वर फोन करा. मी नोटीस तयार करणे थांबवले आहे.',
+    emergencyTitle: 'आणीबाणी? 112 वर फोन करा',
+    emergencyBody: 'तुम्ही धोक्यात असाल किंवा कोणी तुम्हाला इजा केली असेल, तर आत्ताच 112 वर फोन करा. अर्ज़ीने नोटीस तयार करणे थांबवले आहे.',
+    callNow: '112 वर फोन करा',
+    confirmHeard: 'मी ऐकले: {value}. हे बरोबर आहे का? हो किंवा नाही म्हणा.',
+    sayAgain: 'ठीक आहे, कृपया पुन्हा सांगा.',
+    pleaseType: 'कृपया हे लिहा, म्हणजे मी अगदी बरोबर लिहीन.',
+    summaryIntro: 'मी ही माहिती नोंदवली आहे.',
+    summaryAsk: 'सगळे बरोबर आहे का? हो म्हणा, किंवा काय बदलायचे ते सांगा, जसे: रक्कम बदला.',
+    whichField: 'कोणती माहिती बदलायची आहे? जसे म्हणा: रक्कम, किंवा घरमालकाचे नाव.',
+    allSet: 'धन्यवाद. सगळी माहिती तयार आहे. आता मी तुमची कायदेशीर नोटीस तयार करते.',
+    languageChanged: 'ठीक आहे, आता मी मराठीत बोलते.',
+    startOver: 'पुन्हा सुरू करा',
+    readyTitle: 'माहिती पक्की झाली',
+    otherTitle: 'ही अनामत रकमेची अडचण नाही',
+    step: 'प्रश्न {n} / {total}',
+    sameAsAbove: '(भाड्याच्या घराचाच पत्ता)',
+  },
+};
+for (const lang of Object.keys(INTERVIEW)) Object.assign(STRINGS[lang], INTERVIEW[lang]);
+
+// t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.
+export function t(lang, key, vars) {
+  const s = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;
+  return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
 }

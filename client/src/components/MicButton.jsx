@@ -1,10 +1,10 @@
 // The one big round microphone button. `state` drives the look:
 // idle | speaking (Arzi talking) | listening (user talking).
-export default function MicButton({ state = 'idle', label, onClick, disabled }) {
+export default function MicButton({ state = 'idle', size = 'big', label, onClick, disabled }) {
   return (
     <button
       type="button"
-      className={`mic mic-${state}`}
+      className={`mic mic-${state} mic-${size}`}
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
