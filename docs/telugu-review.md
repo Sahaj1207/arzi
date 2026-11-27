@@ -72,7 +72,7 @@ Generated from the code by `npm run review:telugu`. Please do not edit the Telug
 | 60 | `step` | Question {n} of {total} | ప్రశ్న {n} / {total} | |
 | 61 | `sameAsAbove` | (same as rented place) | (అద్దె ఇంటి చిరునామానే) | |
 | 62 | `yourAnswers` | Your answers | మీ సమాధానాలు | |
-| 63 | `aiConsentAsk` | Before we start: to understand you better, Arzi can send your voice and words to {providers}, an outside AI service. Is that okay? Say yes or no. | మొదలుపెట్టే ముందు: మిమ్మల్ని బాగా అర్థం చేసుకోవడానికి, అర్జీ మీ మాటలను {providers} అనే బయటి AI సేవకు పంపగలదు. అది సరేనా? అవును లేదా కాదు అని చెప్పండి. | |
+| 63 | `aiConsentAsk` | Before we start: to understand you better, Arzi can send your voice and words to outside AI services ({providers}). Is that okay? Say yes or no. | మొదలుపెట్టే ముందు: మిమ్మల్ని బాగా అర్థం చేసుకోవడానికి, అర్జీ మీ మాటలను బయటి AI సేవలకు ({providers}) పంపగలదు. అది సరేనా? అవును లేదా కాదు అని చెప్పండి. | |
 | 64 | `aiConsentYes` | Thank you. | ధన్యవాదాలు. | |
 | 65 | `aiConsentNo` | Okay. I will not use any outside AI service. | సరే. నేను బయటి AI సేవను ఉపయోగించను. | |
 | 66 | `sampleBanner` | Sample case: the answers are typed in automatically, as if spoken. | నమూనా కేసు: సమాధానాలు మాట్లాడినట్లుగా వాటంతట అవే టైప్ అవుతున్నాయి. | |

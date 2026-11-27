@@ -55,7 +55,7 @@ export default function Home({ lang, setLang, config }) {
       runInterview(
         { ...io, onAiConsent: setAiConsent },
         // The AI helpers check consent themselves, so they do nothing until the citizen says yes.
-        { askAiConsent, aiProviders: config?.aiProviders?.join(' / '), aiExtract, aiIntent },
+        { askAiConsent, aiProviders: config?.aiProviders?.join(', '), aiExtract, aiIntent },
       ),
     );
   };

@@ -31,7 +31,8 @@ function ownedFinal(req, res) {
   return row;
 }
 
-async function sendPdfOrPrintable(res, row) {
+// autoPrint is off for share links: the person receiving it just reads it.
+async function sendPdfOrPrintable(res, row, { autoPrint = true } = {}) {
   const doc = serializeDocument(row);
   try {
     const pdf = await renderPdf(documentHtml(doc));
@@ -39,7 +40,7 @@ async function sendPdfOrPrintable(res, row) {
     res.type('application/pdf').set('Content-Disposition', `inline; filename="${name}"`).send(pdf);
   } catch (err) {
     console.warn('[pdf] falling back to printable page:', err.message);
-    res.set('X-Arzi-Fallback', 'print').type('html').send(documentHtml(doc, { print: true }));
+    res.set('X-Arzi-Fallback', 'print').type('html').send(documentHtml(doc, { print: true, autoPrint }));
   }
 }
 
@@ -69,7 +70,7 @@ sharedRouter.get('/:token', async (req, res, next) => {
   try {
     const row = /^[A-Za-z0-9_-]{20,40}$/.test(req.params.token) ? byToken.get(req.params.token) : null;
     if (!row || !FINAL.has(row.status)) return bad(res, 'not_found', 404);
-    await sendPdfOrPrintable(res, row);
+    await sendPdfOrPrintable(res, row, { autoPrint: false });
   } catch (err) {
     next(err);
   }

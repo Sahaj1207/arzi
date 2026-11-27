@@ -68,8 +68,8 @@ test('AI consent: asked first when an AI service is configured; "no" is respecte
   const io = scriptedIo('en', answers);
   let stored = null;
   io.onAiConsent = (v) => (stored = v);
-  const r = await runInterview(io, { today, askAiConsent: true, aiProviders: 'Sarvam AI' });
-  assert.match(io.asked[0], /send your voice and words to Sarvam AI/);
+  const r = await runInterview(io, { today, askAiConsent: true, aiProviders: 'Sarvam AI, Groq' });
+  assert.match(io.asked[0], /send your voice and words to outside AI services \(Sarvam AI, Groq\)/);
   assert.equal(r.aiConsent, false);
   assert.equal(stored, false);
   assert.ok(io.said.includes('Okay. I will not use any outside AI service.'));
@@ -78,7 +78,7 @@ test('AI consent: asked first when an AI service is configured; "no" is respecte
 
 test('AI consent: "yes" is recorded; not asked when no AI service', async () => {
   const io = scriptedIo('hi', ['हाँ', ...SAMPLE_SCRIPT.hi]);
-  const r = await runInterview(io, { today, askAiConsent: true, aiProviders: 'Sarvam AI' });
+  const r = await runInterview(io, { today, askAiConsent: true, aiProviders: 'Sarvam AI, Groq' });
   assert.equal(r.aiConsent, true);
   const plain = scriptedIo('hi', SAMPLE_SCRIPT.hi);
   await runInterview(plain, { today });

@@ -1,15 +1,18 @@
-// Paid AI services, used only when SARVAM_API_KEY is set AND the citizen said yes
-// to the consent question (the browser sends aiConsent=yes; without it we refuse).
+// Outside AI services, used only when a key is set AND the citizen said yes to the
+// consent question (the browser sends aiConsent=yes; without it we refuse).
+// Speech-to-text: Sarvam, then Groq (free backup). Voice + understanding: Sarvam.
 // Every route answers a failure with { error, fallback } so the browser switches
 // back to free browser speech / demo parsing and keeps going.
 //
-//   POST /api/ai/stt?userId=&lang=&aiConsent=yes   body: recorded audio → { text }
+//   POST /api/ai/stt?userId=&lang=&aiConsent=yes   body: recorded audio → { text, provider }
 //   POST /api/ai/tts      { userId, lang, text, aiConsent }       → { audios: [base64 wav] }
 //   POST /api/ai/extract  { userId, lang, field, text, aiConsent } → { value } | { value: null }
 //   POST /api/ai/intent   { userId, lang, text, aiConsent }        → { intent }
 import express, { Router } from 'express';
 import { getField, isValidFieldValue, LANGUAGES } from '@arzi/shared';
-import { transcribe, synthesize, chat, sarvamConfigured, ProviderError } from '../providers/sarvam.js';
+import { synthesize, chat, sarvamConfigured } from '../providers/sarvam.js';
+import { ProviderError } from '../providers/errors.js';
+import { transcribeWithFallback, sttChain } from '../providers/speech.js';
 import { takeQuota } from '../usage.js';
 
 export const aiRouter = Router();
@@ -18,8 +21,9 @@ const USER_ID = /^[A-Za-z0-9-]{8,64}$/;
 const AUDIO_TYPES = new Set(['audio/webm', 'audio/ogg', 'audio/wav', 'audio/mp4', 'audio/mpeg']);
 
 // Shared checks: key present, consent given, valid user, quota left.
-function guard(req, { userId, lang, aiConsent }) {
-  if (!sarvamConfigured()) throw new ProviderError('not_configured', 'no key');
+// configured: is there a service for this job (Sarvam by default).
+function guard(req, { userId, lang, aiConsent }, configured = sarvamConfigured) {
+  if (!configured()) throw new ProviderError('not_configured', 'no key');
   if (aiConsent !== true && aiConsent !== 'yes') throw new ProviderError('no_consent', 'citizen did not agree to AI');
   if (!USER_ID.test(userId ?? '')) throw new ProviderError('bad_request', 'invalid user');
   if (lang && !LANG_CODES.has(lang)) throw new ProviderError('bad_request', 'invalid language');
@@ -37,11 +41,10 @@ function fail(res, err) {
 aiRouter.post('/stt', express.raw({ type: () => true, limit: 4 * 1024 * 1024 }), async (req, res) => {
   try {
     const { userId, lang, aiConsent } = req.query;
-    guard(req, { userId, lang, aiConsent });
+    guard(req, { userId, lang, aiConsent }, () => sttChain().length > 0);
     const mime = String(req.get('Content-Type') ?? '').split(';')[0].trim().toLowerCase();
     if (!AUDIO_TYPES.has(mime) || !req.body?.length) throw new ProviderError('bad_request', 'no audio');
-    const { text, languageCode } = await transcribe(req.body, mime, lang);
-    res.json({ text, languageCode });
+    res.json(await transcribeWithFallback(req.body, mime, lang));
   } catch (err) {
     fail(res, err);
   }

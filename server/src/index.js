@@ -16,7 +16,7 @@ try {
 const server = createApp().listen(config.port, () => {
   const p = publicConfig();
   console.log(`Arzi running on http://localhost:${config.port}`);
-  console.log(`  speech: ${p.speech} | tts: ${p.tts} | mode: ${p.mode} | pdf: ${pdfEngine()}`);
+  console.log(`  speech: ${[...p.speechChain, 'browser'].join(' → ')} | tts: ${p.tts} | mode: ${p.mode} | pdf: ${pdfEngine()}`);
 });
 
 const shutdown = async () => {

@@ -69,22 +69,30 @@ flowchart LR
 | A problem that isn't about a deposit | Arzi explains that this prototype only drafts deposit notices and offers to note the problem for an advocate. |
 | Violence or an emergency | Arzi shows **112** right away and stops drafting. |
 | Browser without speech recognition | Arzi says so clearly and shows the keyboard. |
-| PDF engine fails | The app keeps running and opens a printable page instead (Print → Save as PDF). |
-| A paid AI service fails or runs out of credits | The session switches to browser speech by itself and asks the question again. |
+| PDF engine fails | The app keeps running and opens a printable page with a big **Save as PDF** button instead. |
+| A paid AI service fails or runs out of credits | Speech falls back Sarvam → Groq → browser. Once only the browser is left, Arzi asks the question again. |
 
 ## Demo mode vs AI mode
 
-Everything works in **Demo mode** with no keys. Adding a [Sarvam AI](https://docs.sarvam.ai) key in `.env` (`SARVAM_API_KEY`) turns on **AI mode**:
+Everything works in **Demo mode** with no keys. Two optional keys in `.env` add outside AI services:
+
+- **`SARVAM_API_KEY`** ([Sarvam AI](https://docs.sarvam.ai)) turns on **AI mode**: speech-to-text, voice and help understanding answers.
+- **`GROQ_API_KEY`** ([Groq](https://console.groq.com/docs/speech-to-text), free plan) adds a free **backup speech-to-text**, `whisper-large-v3`.
+
+**Speech-to-text fallback order: Sarvam → Groq → browser speech.** If Sarvam fails on an answer (out of credits, timeout, down), the server sends *the same recording* to Groq, so the citizen isn't asked again. If Groq fails too, or Arzi reaches Groq's free limits (20 requests a minute, 2,000 a day, counted by Arzi before Groq refuses, and any `retry-after` respected), the session switches to the browser's own speech and asks the question again. A service that ran out of credits is skipped for a few minutes instead of being tried on every answer. Either key works on its own.
+
+With a Sarvam key:
 
 | | Demo mode (default) | AI mode (Sarvam key set **and** the citizen agrees) |
 |---|---|---|
-| Speech to text | Browser Web Speech API | Sarvam `saaras:v4`: the answer is recorded and uploaded; better with code-mixed speech and noise |
+| Speech to text | Browser Web Speech API | Sarvam `saaras:v4`: the answer is recorded and uploaded; better with code-mixed speech and noise. Backup: Groq `whisper-large-v3`, then the browser |
 | Voice | Browser speech synthesis | Sarvam `bulbul:v3`, used only when the browser has no voice for the language (often the case for Telugu) |
 | Understanding answers | Built-in parsers and keywords | The same, plus `sarvam-105b-conversations` for answers the parsers can't read. The AI only *suggests* a value; Arzi still reads it back and the citizen confirms it. |
 | Notice | Legal template | The same template. Names and addresses spoken in Devanagari or Telugu script are transliterated into English letters for the English notice; the summary keeps the original script. |
 
-- **Consent first:** with a key set, Arzi asks once per session, before anything is sent, whether it may send the citizen's voice and words to Sarvam AI. Saying no keeps the whole session on browser speech.
-- **Never stuck:** any Sarvam error, timeout or "out of credits" switches the session back to browser speech. The footer line shows which is in use.
+- **Consent first:** with any key set, Arzi asks once per session, before anything is sent, whether it may send the citizen's voice and words to the outside AI services by name (for example "Sarvam AI, Groq"). Saying no keeps the whole session on browser speech.
+- **Never stuck:** when every service has failed, the session goes back to browser speech. The footer line shows the order (for example "Sarvam → Groq → browser") and which one is in use, including "Groq (backup; Sarvam unavailable)".
+- With only a Groq key, Groq does speech-to-text while the voice and drafting stay in demo mode.
 - **Keys stay on the server.** The browser only learns *which* services are on, never the key. Paid calls are capped per anonymous user and per IP per day (`PAID_CALLS_PER_USER_PER_DAY`, `PAID_CALLS_PER_IP_PER_DAY`), so a public link can't use up all the credits.
 - Wispr Flow (access is by approval only) and Anthropic are planned but not built yet. Their keys are ignored.
 
@@ -112,7 +120,7 @@ All settings are optional and listed in [`.env.example`](.env.example).
 | Free-tier limit | What Arzi does |
 |---|---|
 | No disk: data is wiped on every restart or redeploy | Sample cases are re-created on every start |
-| 0.1 CPU: a Chromium PDF takes about 55 s | `PDF_ENGINE=print`: **Download PDF** opens the print page (Save as PDF) |
+| 0.1 CPU: a Chromium PDF takes about 55 s (memory is fine, about 230 MB) | `PDF_ENGINE=print`: **Download PDF** opens a phone-friendly page with a big **Save as PDF** button, labelled in the citizen's language. On a computer the print dialog opens by itself. Share links open the page without the print dialog. |
 | Sleeps after 15 minutes idle | Pinged on `/api/health` by an uptime monitor |
 
 ## Development (without Docker)
@@ -123,12 +131,12 @@ You need Node.js 22 or newer.
 npm install
 npm run build        # build the React app into client/dist
 npm start            # API + app on http://localhost:3000
-npm test             # 102 tests: parsers, interview, API, advocate, PDF, Sarvam (fake server)
+npm test             # 111 tests: parsers, interview, API, advocate, PDF, Sarvam + Groq (fake servers)
 ```
 
 For live reload, run `npm run dev:server` and `npm run dev:client` in two terminals, then open http://localhost:5173.
 
-The tests never read your `.env` and never call the real Sarvam API. The Sarvam tests run against a fake local server.
+The tests never read your `.env` and never call the real Sarvam or Groq APIs. Those tests run against fake local servers.
 
 ## Project layout
 
@@ -136,7 +144,7 @@ The tests never read your `.env` and never call the real Sarvam API. The Sarvam 
 shared/   used by client + server: languages, all text (i18n), the 7 fields,
           parsers for amounts / dates / yes-no / intent in hi, mr, en, te
 server/   Express 5 API, SQLite (better-sqlite3), drafting templates,
-          Sarvam provider, usage caps, PDF (Puppeteer + Chromium), demo seed
+          Sarvam + Groq providers, usage caps, PDF (Puppeteer + Chromium), demo seed
 client/   React 19 + Vite: voice layer (speech provider, ask loop, TTS),
           the interview as an async script, read-back + consent, advocate desk
 scripts/  telugu-review.mjs builds the Telugu review sheet
@@ -149,6 +157,7 @@ Some key files:
 - `shared/src/parse/`: spoken numbers and dates in four languages.
 - `server/src/drafting/`: the legal notice and the plain-language summary.
 - `server/src/routes/ai.js`: the consent gate, usage caps and fallback for every paid call.
+- `server/src/providers/speech.js`: the speech-to-text order Sarvam → Groq; `groq.js` has Groq's own rate limiter.
 
 ## Credits
 

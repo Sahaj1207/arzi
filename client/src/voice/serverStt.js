@@ -1,4 +1,5 @@
-// Speech-to-text through the server (Sarvam saaras:v4). Same interface as browserStt.
+// Speech-to-text through the server (Sarvam saaras:v4, or Groq whisper-large-v3 if
+// Sarvam fails; the server picks). Same interface as browserStt.
 // The browser records the answer (MediaRecorder, webm/opus), watches the volume to
 // notice when the person starts and stops talking, then uploads the clip.
 // Any server/provider failure returns { status: 'provider_failed' } and the caller
@@ -11,7 +12,7 @@ const MAX_MS = 25000; // Sarvam's quick endpoint is for clips under 30 s
 
 export function createServerStt() {
   return {
-    name: 'sarvam',
+    name: 'server',
     isSupported: () =>
       typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined',
     listen,
@@ -93,7 +94,7 @@ async function listen({ lang, onInterim = () => {}, signal, silenceMs = 8000 } =
     if (!res.ok) return { status: 'provider_failed', reason: data?.error ?? res.status, text: '' };
     const text = String(data?.text ?? '').trim();
     onInterim(text);
-    return { status: text.length >= 2 ? 'ok' : 'unclear', text, confidence: 1 };
+    return { status: text.length >= 2 ? 'ok' : 'unclear', text, confidence: 1, provider: data?.provider ?? null };
   } catch (err) {
     if (signal?.aborted) return { status: 'aborted', text: '' };
     return { status: 'provider_failed', reason: err?.message ?? 'network', text: '' };

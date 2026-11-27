@@ -38,6 +38,7 @@ export const config = {
   advocateName: env('ADVOCATE_NAME') ?? 'R. Mehta (demo)',
   keys: {
     sarvam: env('SARVAM_API_KEY'),
+    groq: env('GROQ_API_KEY'),
     wispr: env('WISPR_API_KEY'),
     anthropic: env('ANTHROPIC_API_KEY'),
   },
@@ -45,6 +46,9 @@ export const config = {
   limits: {
     perUserPerDay: int('PAID_CALLS_PER_USER_PER_DAY', 150),
     perIpPerDay: int('PAID_CALLS_PER_IP_PER_DAY', 500),
+    // Groq free plan for whisper-large-v3: 20 requests/minute, 2,000/day (whole account).
+    groqPerMinute: int('GROQ_REQUESTS_PER_MINUTE', 20),
+    groqPerDay: int('GROQ_REQUESTS_PER_DAY', 2000),
   },
 };
 
@@ -52,9 +56,12 @@ export const config = {
 export function activeProviders() {
   // Only providers that are actually implemented are reported. Wispr Flow
   // (approval-only) and Anthropic are not wired up yet, so their keys are ignored.
-  const { sarvam } = config.keys;
+  // Speech-to-text tries Sarvam, then Groq (free backup), then the browser.
+  const { sarvam, groq } = config.keys;
+  const speechChain = [sarvam && 'sarvam', groq && 'groq'].filter(Boolean);
   return {
-    speech: sarvam ? 'sarvam' : 'browser',
+    speech: speechChain[0] ?? 'browser',
+    speechChain,
     tts: sarvam ? 'sarvam' : 'browser',
     drafting: sarvam ? 'sarvam' : 'demo',
   };
@@ -63,11 +70,12 @@ export function activeProviders() {
 // Safe to send to the browser: names of providers, never keys.
 export function publicConfig(extra = {}) {
   const p = activeProviders();
-  const NAMES = { sarvam: 'Sarvam AI', wispr: 'Wispr Flow', anthropic: 'Anthropic (Claude)' };
-  // Outside services that would receive the citizen's voice or words (for the consent question).
-  const aiProviders = [...new Set([p.speech, p.tts, p.drafting].filter((x) => NAMES[x]).map((x) => NAMES[x]))];
+  const NAMES = { sarvam: 'Sarvam AI', groq: 'Groq', wispr: 'Wispr Flow', anthropic: 'Anthropic (Claude)' };
+  // Outside services that could receive the citizen's voice or words (for the consent question).
+  const aiProviders = [...new Set([...p.speechChain, p.tts, p.drafting].filter((x) => NAMES[x]).map((x) => NAMES[x]))];
   return {
     speech: p.speech,
+    speechChain: p.speechChain,
     tts: p.tts,
     mode: p.drafting === 'demo' ? 'demo' : 'ai',
     aiProviders,

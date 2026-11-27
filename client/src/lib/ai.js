@@ -20,12 +20,14 @@ export function markAiFailed(service, reason) {
   window.dispatchEvent(new CustomEvent('arzi:ai-fallback', { detail: { service, reason } }));
 }
 export const aiServiceUp = (service) => aiAllowed() && !failed.has(service);
+// Understanding answers (LLM) needs Sarvam; a Groq-only server has speech-to-text only.
+const llmUp = () => runtime?.mode === 'ai' && aiServiceUp('llm');
 export const aiServiceFailed = (service) => failed.has(service);
 
 // LLM help for an answer the built-in parser could not read. Returns a value
 // (still read back to the citizen for a yes/no) or null.
 export async function aiExtract(field, text, lang) {
-  if (!aiServiceUp('llm')) return null;
+  if (!llmUp()) return null;
   const r = await api('/ai/extract', { method: 'POST', body: { userId: getUserId(), lang, field: field.id, text, aiConsent: 'yes' } });
   if (!r.ok) {
     if (r.status !== 400) markAiFailed('llm', r.error);
@@ -36,7 +38,7 @@ export async function aiExtract(field, text, lang) {
 
 // LLM help when keywords did not recognise the problem. 'deposit' | 'emergency' | 'other' | null.
 export async function aiIntent(text, lang) {
-  if (!aiServiceUp('llm')) return null;
+  if (!llmUp()) return null;
   const r = await api('/ai/intent', { method: 'POST', body: { userId: getUserId(), lang, text, aiConsent: 'yes' } });
   if (!r.ok) {
     if (r.status !== 400) markAiFailed('llm', r.error);

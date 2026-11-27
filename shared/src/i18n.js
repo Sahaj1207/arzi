@@ -363,7 +363,7 @@ const DEMO = {
     sampleBanner: 'Sample case: the answers are typed in automatically, as if spoken.',
     demoAdvocateChecking: 'The demo advocate is checking this sample case…',
     aiConsentAsk:
-      'Before we start: to understand you better, Arzi can send your voice and words to {providers}, an outside AI service. Is that okay? Say yes or no.',
+      'Before we start: to understand you better, Arzi can send your voice and words to outside AI services ({providers}). Is that okay? Say yes or no.',
     aiConsentYes: 'Thank you.',
     aiConsentNo: 'Okay. I will not use any outside AI service.',
     pause: 'Pause',
@@ -380,7 +380,7 @@ const DEMO = {
     sampleBanner: 'नमूना केस: जवाब अपने आप लिखे जा रहे हैं, जैसे बोले गए हों।',
     demoAdvocateChecking: 'डेमो वकील इस नमूना केस को जाँच रहे हैं…',
     aiConsentAsk:
-      'शुरू करने से पहले: आपको बेहतर समझने के लिए अर्ज़ी आपकी आवाज़ और बातें {providers} नाम की बाहरी AI सेवा को भेज सकती है। क्या यह ठीक है? हाँ या ना बोलिए।',
+      'शुरू करने से पहले: आपको बेहतर समझने के लिए अर्ज़ी आपकी आवाज़ और बातें बाहरी AI सेवाओं ({providers}) को भेज सकती है। क्या यह ठीक है? हाँ या ना बोलिए।',
     aiConsentYes: 'धन्यवाद।',
     aiConsentNo: 'ठीक है। मैं किसी बाहरी AI सेवा का उपयोग नहीं करूँगी।',
     pause: 'रोकिए',
@@ -397,7 +397,7 @@ const DEMO = {
     sampleBanner: 'नमुना केस: उत्तरे आपोआप लिहिली जात आहेत, जणू बोलली गेली आहेत.',
     demoAdvocateChecking: 'डेमो वकील ही नमुना केस तपासत आहेत…',
     aiConsentAsk:
-      'सुरू करण्यापूर्वी: तुम्हाला अधिक चांगले समजण्यासाठी अर्ज़ी तुमचा आवाज आणि बोलणे {providers} या बाहेरील AI सेवेला पाठवू शकते. हे चालेल का? हो किंवा नाही म्हणा.',
+      'सुरू करण्यापूर्वी: तुम्हाला अधिक चांगले समजण्यासाठी अर्ज़ी तुमचा आवाज आणि बोलणे बाहेरील AI सेवांना ({providers}) पाठवू शकते. हे चालेल का? हो किंवा नाही म्हणा.',
     aiConsentYes: 'धन्यवाद.',
     aiConsentNo: 'ठीक आहे. मी कोणतीही बाहेरील AI सेवा वापरणार नाही.',
     pause: 'थांबा',

@@ -7,6 +7,7 @@
 // with a `kind` the caller can act on: 'quota' (out of credits / rate limit),
 // 'auth' (bad key), 'unavailable' (timeout, 5xx), 'bad_request', 'not_configured'.
 import { config } from '../config.js';
+import { ProviderError } from './errors.js';
 
 // SARVAM_BASE_URL exists only so tests can point at a fake Sarvam server.
 const BASE = process.env.SARVAM_BASE_URL || 'https://api.sarvam.ai';
@@ -15,13 +16,7 @@ export const TTS_MODEL = 'bulbul:v3';
 export const CHAT_MODEL = 'sarvam-105b-conversations';
 const TTS_SPEAKER = process.env.SARVAM_TTS_SPEAKER || 'priya';
 
-export class ProviderError extends Error {
-  constructor(kind, message, status = null) {
-    super(message);
-    this.kind = kind;
-    this.status = status;
-  }
-}
+export { ProviderError };
 
 export const sarvamConfigured = () => Boolean(config.keys.sarvam);
 
