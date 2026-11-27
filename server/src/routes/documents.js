@@ -6,8 +6,12 @@
 //   GET  /api/documents/:id?userId=   one document: status, fields, latest version, advocate notes
 //   POST /api/documents/:id/revise    citizen fixed details after "request changes" → next version
 //   POST /api/notes              "not a deposit problem" noted for an advocate
+//   POST /api/documents/:id/consent?userId=&method=&transcript=   body: the recorded audio (optional)
+//   GET  /api/documents/:id/consent-audio?userId=                 play the recording back
 import { randomUUID } from 'node:crypto';
-import { Router } from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
+import express, { Router } from 'express';
 import { FIELDS, LANGUAGES, isValidFieldValue } from '@arzi/shared';
 import { db } from '../db.js';
 import { config } from '../config.js';
@@ -55,6 +59,18 @@ const updateForRevision = db.prepare(`
   UPDATE documents SET status = 'pending_review', fields_json = ?, transcript = ?, updated_at = datetime('now')
   WHERE id = ?`);
 
+const latestConsent = db.prepare(
+  'SELECT c.*, v.version_no FROM consents c JOIN versions v ON v.id = c.version_id WHERE c.document_id = ? ORDER BY c.id DESC LIMIT 1',
+);
+const insertConsent = db.prepare(
+  'INSERT INTO consents (document_id, version_id, audio_path, transcript, method) VALUES (?, ?, ?, ?, ?)',
+);
+
+// Audio types browsers record (Chrome/Android: webm, Firefox: ogg, Safari: mp4).
+const AUDIO_TYPES = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/wav': 'wav', 'audio/mpeg': 'mp3' };
+const EXT_TYPES = Object.fromEntries(Object.entries(AUDIO_TYPES).map(([type, ext]) => [ext, type]));
+const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+
 const APPROVED = new Set(['approved', 'consented']);
 const shapeVersion = (v) => ({
   no: v.version_no,
@@ -90,6 +106,10 @@ export function serializeDocument(row, { withVersion = true, raw = false, versio
     out.reviews = reviewsFor.all(row.id).map((r) => ({ action: r.action, note: r.note, createdAt: r.created_at }));
   }
   if (versions) out.versions = allVersions.all(row.id).map(shapeVersion);
+  const c = latestConsent.get(row.id);
+  out.consent = c
+    ? { method: c.method, transcript: c.transcript, hasAudio: Boolean(c.audio_path), versionNo: c.version_no, createdAt: c.created_at }
+    : null;
   return out;
 }
 
@@ -171,6 +191,52 @@ documentsRouter.post('/:id/revise', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// Spoken consent to the approved notice. The body is the raw audio recording
+// (MediaRecorder output). method=button with an empty body is the fallback when
+// the phone could not record (mic busy / no MediaRecorder).
+documentsRouter.post(
+  '/:id/consent',
+  express.raw({ type: () => true, limit: MAX_AUDIO_BYTES }),
+  (req, res) => {
+    const { userId, method = 'voice', transcript = '' } = req.query;
+    const row = getDoc.get(req.params.id);
+    if (!row || row.user_id !== userId) return bad(res, 'not_found', 404);
+    if (row.status !== 'approved') return bad(res, 'not_approved', 409);
+    if (!['voice', 'button'].includes(method)) return bad(res, 'invalid_method');
+
+    const audio = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    const type = String(req.get('Content-Type') ?? '').split(';')[0].trim().toLowerCase();
+    let audioPath = '';
+    if (audio.length > 0) {
+      const ext = AUDIO_TYPES[type];
+      if (!ext) return bad(res, 'unsupported_audio');
+      audioPath = path.join('recordings', `${row.id}-${Date.now()}.${ext}`);
+      fs.writeFileSync(path.join(config.dataDir, audioPath), audio);
+    } else if (method === 'voice' && !String(transcript).trim()) {
+      // A spoken "yes" needs either the recording or, if the phone could not record, the words heard.
+      return bad(res, 'missing_audio');
+    }
+
+    const version = latestVersion.get(row.id);
+    db.transaction(() => {
+      insertConsent.run(row.id, version.id, audioPath, String(transcript).slice(0, 1000), method);
+      db.prepare("UPDATE documents SET status = 'consented', updated_at = datetime('now') WHERE id = ?").run(row.id);
+    })();
+    res.status(201).json(serializeDocument(getDoc.get(row.id), { versions: true }));
+  },
+);
+
+documentsRouter.get('/:id/consent-audio', (req, res) => {
+  const row = getDoc.get(req.params.id);
+  if (!row || row.user_id !== req.query.userId) return bad(res, 'not_found', 404);
+  const c = latestConsent.get(row.id);
+  if (!c?.audio_path) return bad(res, 'no_audio', 404);
+  const file = path.join(config.dataDir, c.audio_path);
+  if (!fs.existsSync(file)) return bad(res, 'no_audio', 404);
+  res.type(EXT_TYPES[path.extname(file).slice(1)] ?? 'application/octet-stream');
+  res.sendFile(file);
 });
 
 notesRouter.post('/', (req, res) => {

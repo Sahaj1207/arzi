@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { detectIntent, detectLanguageSwitch, detectFieldToChange, parseYesNo } from '../src/index.js';
+import { detectIntent, detectLanguageSwitch, detectFieldToChange, parseYesNo, parseConsent } from '../src/index.js';
 
 const intent = (text) => detectIntent(text).intent;
 
@@ -48,6 +48,21 @@ test('switching language by voice', () => {
   assert.equal(detectLanguageSwitch('मराठी'), 'mr');
   assert.equal(detectLanguageSwitch('my landlord is from a Marathi family who lives nearby'), null);
   assert.equal(detectLanguageSwitch('Hindi or English'), null);
+});
+
+test('consent answers', () => {
+  for (const a of ['yes, I understood and I agree', 'I agree', 'हाँ, मुझे समझ आ गया और मैं सहमत हूँ', 'haan samajh gaya', 'हो, मला समजले आणि मी सहमत आहे']) {
+    assert.equal(parseConsent(a), 'agree', a);
+  }
+  for (const a of ['no', 'I do not agree', 'समझ नहीं आया', 'मला समजले नाही', 'nahi']) {
+    assert.equal(parseConsent(a), 'no', a);
+  }
+  assert.equal(parseConsent('English please'), 'english');
+  assert.equal(parseConsent('अंग्रेज़ी में सुनाओ'), 'english');
+  assert.equal(parseConsent('इंग्रजीत वाचा'), 'english');
+  assert.equal(parseConsent('phir se padho'), 'repeat');
+  assert.equal(parseConsent('पुन्हा वाचा'), 'repeat');
+  assert.equal(parseConsent('hmm'), null);
 });
 
 test('which field to correct', () => {

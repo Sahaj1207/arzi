@@ -9,6 +9,8 @@ import { getUserId } from '../lib/userId.js';
 import { speak } from '../voice/tts.js';
 import FieldCards from '../components/FieldCards.jsx';
 import FixDetails from '../components/FixDetails.jsx';
+import ReadBack from '../components/ReadBack.jsx';
+import ConsentRecord from '../components/ConsentRecord.jsx';
 
 const POLL_MS = 5000;
 const SPOKEN = { pending_review: 'sentSpoken', approved: 'approvedSpoken', changes_requested: 'changesSpoken' };
@@ -18,6 +20,7 @@ export default function DocumentStatus({ lang }) {
   const [doc, setDoc] = useState(null);
   const [error, setError] = useState(null); // 'notFound' | 'offline'
   const [fixing, setFixing] = useState(false);
+  const [reading, setReading] = useState(false);
   const lastStatus = useRef(null);
 
   useEffect(() => {
@@ -79,6 +82,26 @@ export default function DocumentStatus({ lang }) {
         </section>
       )}
 
+      {doc.status === 'approved' && !reading && (
+        <button type="button" className="btn btn-primary btn-big" onClick={() => setReading(true)}>
+          {t(dl, 'listenAndAgree')}
+        </button>
+      )}
+
+      {reading && doc.status === 'approved' && (
+        <ReadBack
+          doc={doc}
+          onClose={() => setReading(false)}
+          onDone={(updated) => {
+            lastStatus.current = updated.status;
+            setDoc(updated);
+            setReading(false);
+          }}
+        />
+      )}
+
+      <ConsentRecord doc={doc} />
+
       {doc.status === 'changes_requested' && !fixing && (
         <button type="button" className="btn btn-primary btn-big" onClick={() => setFixing(true)}>
           {t(dl, 'fixDetails')}
@@ -98,7 +121,7 @@ export default function DocumentStatus({ lang }) {
         />
       )}
 
-      {doc.version && !fixing && (
+      {doc.version && !fixing && !reading && (
         <>
           <section className="summary" lang={dl}>
             <h2>{t(dl, 'summaryHeading')}</h2>

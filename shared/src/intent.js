@@ -67,6 +67,33 @@ export function detectLanguageSwitch(text) {
   return null;
 }
 
+// Answer to "Did you understand this document and do you agree?"
+//   'agree' | 'no' | 'english' (read the English notice) | 'repeat' (read again) | null
+const CONSENT_AGREE = [
+  'yes', 'agree', 'i agree', 'understood', 'i understand', 'ok', 'okay',
+  'haan', 'ha', 'ji', 'sahmat', 'samajh gaya', 'samajh gayi', 'samjha', 'samjhi', 'manzoor', 'theek hai',
+  'हाँ', 'हां', 'जी', 'सहमत', 'समझ', 'समझ गया', 'समझ गई', 'समझ गयी', 'मंजूर', 'मंज़ूर', 'ठीक है',
+  'हो', 'होय', 'समजले', 'समजलं', 'मान्य', 'मंजूर आहे', 'सहमत आहे',
+];
+const CONSENT_NO = [
+  'no', 'not', 'disagree', "don't", 'nahi', 'nahin', 'na', 'नहीं', 'नही', 'ना', 'नाही', 'नको', 'असहमत',
+];
+const CONSENT_ENGLISH = ['english', 'angrezi', 'angreji', 'अंग्रेजी', 'अंग्रेज़ी', 'इंग्लिश', 'इंग्रजी', 'इंग्रजीत'];
+const CONSENT_REPEAT = [
+  'again', 'repeat', 'once more', 'phir se', 'dobara', 'fir se', 'फिर से', 'दोबारा', 'पुन्हा', 'परत ऐका', 'परत सांगा',
+];
+
+export function parseConsent(text) {
+  const norm = normalize(text);
+  const tokens = tokenize(text);
+  if (tokens.length === 0) return null;
+  if (hasAnyStem(tokens, norm, CONSENT_ENGLISH)) return 'english';
+  if (hasAny(tokens, norm, CONSENT_REPEAT)) return 'repeat';
+  if (hasAny(tokens, norm, CONSENT_NO)) return 'no'; // "samajh nahi aaya", "not agree"
+  if (hasAny(tokens, norm, CONSENT_AGREE)) return 'agree';
+  return null;
+}
+
 // During the summary: "change the amount", "naam galat hai", "रक्कम बदला" → field id or null.
 const FIELD_WORDS = {
   name: ['name', 'naam', 'नाम', 'नाव', 'spelling'],

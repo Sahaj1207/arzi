@@ -286,6 +286,19 @@ textarea.editor:not(#note) { font-family: Georgia, 'Times New Roman', var(--font
 .btn.btn-warn { border-color: var(--red); color: var(--red); }
 @media (max-width: 560px) { .decide-buttons { grid-template-columns: 1fr; } }
 
+/* Read-back + consent */
+.readback { width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.readback-points { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; font-size: 21px; }
+.readback-points li { padding: 8px 10px; border-radius: 10px; transition: background 0.2s; }
+.readback-points li.is-current { background: #fff1d6; box-shadow: inset 6px 0 0 var(--marigold); font-weight: 700; }
+.readback-buttons { display: grid; gap: 10px; }
+.rec-badge { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 700; color: var(--red); }
+.rec-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--red); animation: pulse 1s ease-in-out infinite; }
+.consent-record { padding: 14px 16px; border-radius: 14px; border: 2px solid var(--teal); background: #fff; display: grid; gap: 8px; }
+.consent-record p { margin: 0; }
+.consent-words { font-size: 20px; font-weight: 700; }
+.consent-record audio { width: 100%; }
+
 .paused-note { margin: 0; font-weight: 700; font-size: 21px; }
 
 /* Buttons */

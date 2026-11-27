@@ -120,6 +120,58 @@ test('request changes needs a note; the citizen fixes details → version 2 back
   assert.equal((await req('POST', `/documents/${doc.id}/revise`, { userId: USER, fields: fixedFields })).status, 409);
 });
 
+const consent = (id, { method = 'voice', transcript = '', audio, type = 'audio/webm', userId = USER } = {}) =>
+  fetch(`${base}/documents/${id}/consent?${new URLSearchParams({ userId, method, transcript })}`, {
+    method: 'POST',
+    headers: { 'Content-Type': type },
+    body: audio,
+  });
+
+test('spoken consent: recording saved, playable, status consented', async () => {
+  const doc = await newDocument('mr');
+  const fakeAudio = Buffer.from('OggS-fake-webm-bytes-for-test');
+
+  // Not approved yet → refused.
+  assert.equal((await consent(doc.id, { audio: fakeAudio, transcript: 'हो' })).status, 409);
+
+  await req('POST', `/advocate/documents/${doc.id}/approve`, {}, PIN);
+
+  // Someone else's ID → not found. Unknown audio type → refused.
+  assert.equal((await consent(doc.id, { audio: fakeAudio, userId: 'intruder-000001' })).status, 404);
+  assert.equal((await consent(doc.id, { audio: fakeAudio, type: 'text/html' })).status, 400);
+
+  const r = await consent(doc.id, { audio: fakeAudio, transcript: 'हो, मला समजले आणि मी सहमत आहे' });
+  assert.equal(r.status, 201);
+  const saved = await r.json();
+  assert.equal(saved.status, 'consented');
+  assert.deepEqual(
+    { method: saved.consent.method, hasAudio: saved.consent.hasAudio, versionNo: saved.consent.versionNo },
+    { method: 'voice', hasAudio: true, versionNo: 1 },
+  );
+  assert.match(saved.version.notice, /Reviewed by Advocate/); // consented still shows the review line
+
+  const audio = await fetch(`${base}/documents/${doc.id}/consent-audio?userId=${USER}`);
+  assert.equal(audio.status, 200);
+  assert.equal(audio.headers.get('content-type'), 'audio/webm');
+  assert.equal(Buffer.from(await audio.arrayBuffer()).toString(), fakeAudio.toString());
+
+  // Only once.
+  assert.equal((await consent(doc.id, { audio: fakeAudio, transcript: 'हो' })).status, 409);
+});
+
+test('button consent works without audio (mic could not record)', async () => {
+  const doc = await newDocument();
+  await req('POST', `/advocate/documents/${doc.id}/approve`, {}, PIN);
+  // A spoken consent with neither audio nor words is refused.
+  assert.equal((await consent(doc.id, { method: 'voice', type: 'application/octet-stream' })).status, 400);
+  const r = await consent(doc.id, { method: 'button', type: 'application/octet-stream' });
+  assert.equal(r.status, 201);
+  const saved = await r.json();
+  assert.equal(saved.consent.method, 'button');
+  assert.equal(saved.consent.hasAudio, false);
+  assert.equal((await fetch(`${base}/documents/${doc.id}/consent-audio?userId=${USER}`)).status, 404);
+});
+
 test('notes for non-deposit problems are listed for the advocate', async () => {
   await req('POST', '/notes', { userId: USER, lang: 'mr', problem: 'पगार मिळाला नाही' });
   const notes = await json(req('GET', '/advocate/notes', null, PIN));
