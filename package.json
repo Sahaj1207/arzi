@@ -15,7 +15,8 @@
     "build": "npm run build --workspace client",
     "start": "node server/src/index.js",
     "test": "node --test \"shared/test/*.test.js\" \"client/test/*.test.js\" \"server/test/*.test.js\"",
-    "review:telugu": "node scripts/telugu-review.mjs"
+    "review:telugu": "node scripts/telugu-review.mjs && node scripts/telugu-review-short.mjs",
+    "review:telugu-short": "node scripts/telugu-review-short.mjs"
   },
   "engines": {
     "node": ">=22"

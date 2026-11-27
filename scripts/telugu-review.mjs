@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { t, FIELDS } from '../shared/src/index.js';
 import { TE } from '../shared/src/i18n-te.js';
 import { SAMPLE_SCRIPT } from '../client/src/demo/sampleScript.js';
+import { summaryPairs, cell } from './telugu-sample.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const cell = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, '<br>');
 const out = [];
 const w = (s = '') => out.push(s);
 
@@ -38,27 +38,13 @@ for (const f of FIELDS) {
 }
 w();
 
-// The summary template lives on the server; render it with sample values.
-const { buildSummary } = await import('../server/src/drafting/summary.js');
-const sampleFields = {
-  tenantName: { text: 'ప్రియా శర్మ' },
-  tenantAddress: { text: 'రూమ్ 12, శాంతి పీజీ, అమీర్‌పేట్, హైదరాబాద్ 500016' },
-  landlordName: { text: 'రాజేష్ గుప్తా' },
-  landlordAddress: { text: '8 మైత్రివనం రోడ్, అమీర్‌పేట్, హైదరాబాద్ 500016' },
-  depositAmount: { amount: 25000 },
-  movedOutDate: { iso: '2026-09-15', precision: 'day' },
-  dueDate: { kind: 'date', iso: '2026-09-30', precision: 'day' },
-};
 w('## 3. Plain-language summary of the notice (read aloud before consent)');
 w();
 w('Shown with the sample case values. This is the most important part: the citizen agrees to the notice based on this.');
 w();
 w('| Point | English | Telugu (draft) | OK? / correction |');
 w('|---|---|---|---|');
-const en = buildSummary({ ...sampleFields, tenantName: { text: 'Priya Sharma' }, landlordName: { text: 'Rajesh Gupta' } }, 'en').split('\n');
-buildSummary(sampleFields, 'te')
-  .split('\n')
-  .forEach((line, i) => w(`| ${i + 1} | ${cell(en[i])} | ${cell(line)} | |`));
+summaryPairs().forEach(({ en, te }, i) => w(`| ${i + 1} | ${cell(en)} | ${cell(te)} | |`));
 w();
 
 w('## 4. Words Arzi listens for in Telugu');
