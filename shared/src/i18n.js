@@ -2,7 +2,8 @@
 // Step 1 holds the home screen lines; later steps add the interview lines here.
 const STRINGS = {
   en: {
-    tagline: 'Speak your problem. Get a lawyer-checked legal notice.',
+    // U+2011 non-breaking hyphen: "lawyer‑checked" never splits across lines.
+    tagline: 'Speak your problem. Get a lawyer‑checked notice.',
     chooseLanguage: 'Choose your language',
     tapToSpeak: 'Tap and speak',
     greeting:
@@ -28,7 +29,7 @@ const STRINGS = {
     stop: 'Stop',
   },
   hi: {
-    tagline: 'अपनी समस्या बोलिए। वकील से जाँचा हुआ लीगल नोटिस पाइए।',
+    tagline: 'अपनी समस्या बोलिए। वकील से जाँचा नोटिस पाइए।',
     chooseLanguage: 'अपनी भाषा चुनिए',
     tapToSpeak: 'दबाइए और बोलिए',
     greeting:
@@ -54,7 +55,7 @@ const STRINGS = {
     stop: 'रोकिए',
   },
   mr: {
-    tagline: 'तुमची अडचण बोला. वकिलाने तपासलेली कायदेशीर नोटीस मिळवा.',
+    tagline: 'तुमची अडचण बोला. वकिलाने तपासलेली नोटीस मिळवा.',
     chooseLanguage: 'तुमची भाषा निवडा',
     tapToSpeak: 'दाबा आणि बोला',
     greeting:
@@ -473,6 +474,15 @@ const DESIGN = {
   },
 };
 for (const lang of Object.keys(DESIGN)) Object.assign(STRINGS[lang], DESIGN[lang]);
+
+// The home headline is the tagline with one word set in a serif accent.
+// taglineAccent must appear exactly once inside tagline.
+const ACCENT = {
+  en: { taglineAccent: 'notice' },
+  hi: { taglineAccent: 'नोटिस' },
+  mr: { taglineAccent: 'नोटीस' },
+};
+for (const lang of Object.keys(ACCENT)) Object.assign(STRINGS[lang], ACCENT[lang]);
 
 // t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.
 export function t(lang, key, vars) {

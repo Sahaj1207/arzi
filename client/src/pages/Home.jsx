@@ -24,6 +24,19 @@ import { hasSpeechRecognition, isSecureForMic } from '../voice/support.js';
 const sampleSpeak = (text) =>
   new Promise((resolve) => setTimeout(() => resolve({ spoken: true }), Math.min(1300, Math.max(650, 300 + text.length * 7))));
 
+// The headline with its one accent word set in serif.
+function Accented({ text, accent }) {
+  const i = accent ? text.indexOf(accent) : -1;
+  if (i === -1) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <em className="accent">{accent}</em>
+      {text.slice(i + accent.length)}
+    </>
+  );
+}
+
 export default function Home({ lang, setLang, config }) {
   const { view, start, respond, reset } = useInterview({ lang, setLang });
   const started = view.running || view.outcome;
@@ -101,7 +114,9 @@ export default function Home({ lang, setLang, config }) {
       <main className="home">
         <section className="hero">
           <div className="hero-copy">
-            <h1 className="tagline">{t(lang, 'tagline')}</h1>
+            <h1 className="tagline">
+              <Accented text={t(lang, 'tagline')} accent={t(lang, 'taglineAccent')} />
+            </h1>
             {lang !== 'en' && (
               <p className="tagline-en" lang="en">
                 {t('en', 'tagline')}

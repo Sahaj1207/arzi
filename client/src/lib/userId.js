@@ -41,4 +41,16 @@ export function getUserId() {
 
 const LANG_KEY = 'arzi.language';
 export const getSavedLanguage = () => store.get(LANG_KEY);
+
+// First visit: Hindi or Marathi if the browser prefers it, otherwise English.
+// A saved choice always wins (see App.jsx).
+export function detectLanguage() {
+  const prefs = typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const tag of prefs) {
+    const base = String(tag ?? '').toLowerCase().split('-')[0];
+    if (base === 'hi' || base === 'mr') return base;
+    if (base === 'en') return 'en';
+  }
+  return 'en';
+}
 export const saveLanguage = (code) => store.set(LANG_KEY, code);

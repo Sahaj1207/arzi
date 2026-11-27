@@ -1,9 +1,9 @@
 // App shell: header with badges, routes, and the "not legal advice" footer.
 import { useCallback, useEffect, useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { DEFAULT_LANGUAGE, t } from '@arzi/shared';
+import { LANGUAGES, t } from '@arzi/shared';
 import { api } from './lib/api.js';
-import { getUserId, getSavedLanguage, saveLanguage } from './lib/userId.js';
+import { getUserId, getSavedLanguage, saveLanguage, detectLanguage } from './lib/userId.js';
 import ModeBadges from './components/ModeBadges.jsx';
 import Home from './pages/Home.jsx';
 import DocumentStatus from './pages/DocumentStatus.jsx';
@@ -12,7 +12,10 @@ import History from './pages/History.jsx';
 
 export default function App() {
   const [config, setConfig] = useState(null);
-  const [lang, setLangState] = useState(getSavedLanguage() ?? DEFAULT_LANGUAGE);
+  const [lang, setLangState] = useState(() => {
+    const saved = getSavedLanguage();
+    return saved && LANGUAGES.some((l) => l.code === saved) ? saved : detectLanguage();
+  });
 
   useEffect(() => {
     getUserId(); // make sure this device has an anonymous ID
