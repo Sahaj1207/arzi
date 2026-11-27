@@ -44,6 +44,28 @@ export function parseFieldAnswer(field, text, { today = new Date(), fields = {} 
   }
 }
 
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+const PRECISION = new Set(['day', 'month']);
+
+// Server-side check that a submitted value has the right shape for its field.
+export function isValidFieldValue(field, v) {
+  if (!v || typeof v !== 'object') return false;
+  switch (field.type) {
+    case 'name':
+    case 'address':
+      return typeof v.text === 'string' && v.text.trim().length >= 2 && v.text.length <= 300;
+    case 'amount':
+      return Number.isInteger(v.amount) && v.amount >= 100 && v.amount <= 10_000_000;
+    case 'date':
+      return ISO.test(v.iso) && PRECISION.has(v.precision);
+    case 'pending':
+      if (v.kind === 'date') return ISO.test(v.iso) && PRECISION.has(v.precision);
+      return v.kind === 'duration' && v.value > 0 && ['day', 'week', 'month', 'year'].includes(v.unit) && ISO.test(v.sinceIso);
+    default:
+      return false;
+  }
+}
+
 export function displayFieldValue(field, value, lang) {
   if (!value) return '';
   switch (field.type) {

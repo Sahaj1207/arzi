@@ -165,6 +165,74 @@ const INTERVIEW = {
 };
 for (const lang of Object.keys(INTERVIEW)) Object.assign(STRINGS[lang], INTERVIEW[lang]);
 
+// Lines for saving the document and its status page (step 5).
+const STATUS = {
+  en: {
+    saving: 'Saving your details…',
+    saveFailed: 'Could not save. Please check your internet and try again.',
+    retry: 'Try again',
+    status_pending_review: 'Sent to advocate for checking',
+    status_changes_requested: 'The advocate asked for changes',
+    status_approved: 'Checked and approved by the advocate',
+    status_consented: 'Approved and agreed',
+    sentSpoken: 'Your legal notice has been sent to an advocate for checking. This page will update by itself when the advocate has checked it.',
+    approvedSpoken: 'Good news. The advocate has checked and approved your legal notice.',
+    changesSpoken: 'The advocate has asked for some changes. Please see the note on the screen.',
+    autoUpdate: 'This page updates by itself.',
+    summaryHeading: 'In simple words',
+    noticeHeading: 'Legal notice (English)',
+    detailsHeading: 'Your details',
+    advocateNote: 'Note from the advocate',
+    newNotice: 'Make a new notice',
+    notFound: 'This document was not found on this device.',
+    offline: 'No connection. Trying again…',
+    version: 'Version {n}',
+  },
+  hi: {
+    saving: 'आपकी जानकारी सेव हो रही है…',
+    saveFailed: 'सेव नहीं हो सका। कृपया इंटरनेट जाँचिए और फिर से कोशिश कीजिए।',
+    retry: 'फिर से कोशिश करें',
+    status_pending_review: 'वकील को जाँच के लिए भेजा गया',
+    status_changes_requested: 'वकील ने बदलाव माँगे हैं',
+    status_approved: 'वकील ने जाँच कर मंज़ूरी दी',
+    status_consented: 'मंज़ूर और सहमति दी गई',
+    sentSpoken: 'आपका लीगल नोटिस जाँच के लिए वकील को भेज दिया गया है। जब वकील इसे जाँच लेंगे, तो यह पेज अपने आप बदल जाएगा।',
+    approvedSpoken: 'अच्छी खबर। वकील ने आपका लीगल नोटिस जाँच कर मंज़ूर कर दिया है।',
+    changesSpoken: 'वकील ने कुछ बदलाव माँगे हैं। कृपया स्क्रीन पर लिखा नोट देखिए।',
+    autoUpdate: 'यह पेज अपने आप अपडेट होता है।',
+    summaryHeading: 'आसान शब्दों में',
+    noticeHeading: 'लीगल नोटिस (अंग्रेज़ी में)',
+    detailsHeading: 'आपकी जानकारी',
+    advocateNote: 'वकील का नोट',
+    newNotice: 'नया नोटिस बनाएँ',
+    notFound: 'यह दस्तावेज़ इस फ़ोन पर नहीं मिला।',
+    offline: 'कनेक्शन नहीं है। फिर से कोशिश कर रहे हैं…',
+    version: 'संस्करण {n}',
+  },
+  mr: {
+    saving: 'तुमची माहिती सेव्ह होत आहे…',
+    saveFailed: 'सेव्ह झाले नाही. कृपया इंटरनेट तपासा आणि पुन्हा प्रयत्न करा.',
+    retry: 'पुन्हा प्रयत्न करा',
+    status_pending_review: 'तपासणीसाठी वकिलांकडे पाठवली',
+    status_changes_requested: 'वकिलांनी बदल सुचवले आहेत',
+    status_approved: 'वकिलांनी तपासून मंजूर केली',
+    status_consented: 'मंजूर आणि संमती दिली',
+    sentSpoken: 'तुमची कायदेशीर नोटीस तपासणीसाठी वकिलांकडे पाठवली आहे. वकिलांनी तपासल्यावर हे पान आपोआप बदलेल.',
+    approvedSpoken: 'चांगली बातमी. वकिलांनी तुमची कायदेशीर नोटीस तपासून मंजूर केली आहे.',
+    changesSpoken: 'वकिलांनी काही बदल सुचवले आहेत. कृपया स्क्रीनवरील नोंद पाहा.',
+    autoUpdate: 'हे पान आपोआप अपडेट होते.',
+    summaryHeading: 'सोप्या शब्दांत',
+    noticeHeading: 'कायदेशीर नोटीस (इंग्रजीत)',
+    detailsHeading: 'तुमची माहिती',
+    advocateNote: 'वकिलांची नोंद',
+    newNotice: 'नवीन नोटीस तयार करा',
+    notFound: 'हे कागदपत्र या फोनवर सापडले नाही.',
+    offline: 'कनेक्शन नाही. पुन्हा प्रयत्न करत आहे…',
+    version: 'आवृत्ती {n}',
+  },
+};
+for (const lang of Object.keys(STATUS)) Object.assign(STRINGS[lang], STATUS[lang]);
+
 // t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.
 export function t(lang, key, vars) {
   const s = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;

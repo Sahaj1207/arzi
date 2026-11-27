@@ -28,7 +28,8 @@ export const config = {
   dataDir: path.resolve(REPO_ROOT, env('DATA_DIR') ?? 'data'),
   chromiumPath: env('CHROMIUM_PATH'),
   advocatePin: env('ADVOCATE_PIN') ?? '1234',
-  advocateName: env('ADVOCATE_NAME') ?? 'Demo Advocate',
+  // Fictional demo advocate; the notice reads "Reviewed by Advocate R. Mehta (demo)".
+  advocateName: env('ADVOCATE_NAME') ?? 'R. Mehta (demo)',
   keys: {
     sarvam: env('SARVAM_API_KEY'),
     wispr: env('WISPR_API_KEY'),

@@ -6,6 +6,7 @@ import { api } from './lib/api.js';
 import { getUserId, getSavedLanguage, saveLanguage } from './lib/userId.js';
 import ModeBadges from './components/ModeBadges.jsx';
 import Home from './pages/Home.jsx';
+import DocumentStatus from './pages/DocumentStatus.jsx';
 
 export default function App() {
   const [config, setConfig] = useState(null);
@@ -37,6 +38,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<Home lang={lang} setLang={setLang} />} />
+        <Route path="/documents/:id" element={<DocumentStatus lang={lang} />} />
         <Route path="*" element={<Home lang={lang} setLang={setLang} />} />
       </Routes>
 

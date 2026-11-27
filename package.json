@@ -14,7 +14,7 @@
     "dev:client": "npm run dev --workspace client",
     "build": "npm run build --workspace client",
     "start": "node server/src/index.js",
-    "test": "node --test"
+    "test": "node --test \"shared/test/*.test.js\" \"client/test/*.test.js\" \"server/test/*.test.js\""
   },
   "engines": {
     "node": ">=22"

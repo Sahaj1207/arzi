@@ -64,6 +64,34 @@ export function speakDate(iso, lang, precision = 'day') {
   return precision === 'month' ? `${month}, ${year}` : `${spellDigits(d, l)}, ${month}, ${year}`;
 }
 
+// 20000 → "Twenty Thousand", 150000 → "One Lakh Fifty Thousand" (Indian system,
+// as written in legal documents: "Rupees Twenty Thousand only").
+const ONES = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+  'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+const TENS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+const twoDigits = (n) => (n < 20 ? ONES[n] : `${TENS[Math.floor(n / 10)]}${n % 10 ? ` ${ONES[n % 10]}` : ''}`);
+const threeDigits = (n) =>
+  [Math.floor(n / 100) ? `${ONES[Math.floor(n / 100)]} Hundred` : '', n % 100 ? twoDigits(n % 100) : '']
+    .filter(Boolean)
+    .join(' ');
+
+export function amountInWordsEn(n) {
+  n = Math.floor(n);
+  if (n === 0) return 'Zero';
+  const crore = Math.floor(n / 1e7);
+  const lakh = Math.floor(n / 1e5) % 100;
+  const thousand = Math.floor(n / 1e3) % 100;
+  const rest = n % 1000;
+  return [
+    crore ? `${amountInWordsEn(crore)} Crore` : '',
+    lakh ? `${twoDigits(lakh)} Lakh` : '',
+    thousand ? `${twoDigits(thousand)} Thousand` : '',
+    rest ? threeDigits(rest) : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 // { value: 3, unit: 'month' } → "3 months" / "3 महीने" / "3 महिने"
 export function formatDuration({ value, unit }, lang) {
   const [one, many] = UNIT_NAMES[lang3(lang)][unit];
