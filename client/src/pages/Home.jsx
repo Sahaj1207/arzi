@@ -100,36 +100,41 @@ export default function Home({ lang, setLang, config }) {
     return (
       <main className="home">
         <section className="hero">
-          <h1 className="tagline">{t(lang, 'tagline')}</h1>
-          {lang !== 'en' && (
-            <p className="tagline-en" lang="en">
-              {t('en', 'tagline')}
-            </p>
-          )}
-
-          <div className="lang-row" role="radiogroup" aria-label={t(lang, 'chooseLanguage')}>
-            {LANGUAGES.map((l) => (
-              <button
-                key={l.code}
-                type="button"
-                role="radio"
-                aria-checked={lang === l.code}
-                className={`lang ${lang === l.code ? 'lang-on' : ''}`}
-                onClick={() => setLang(l.code)}
-                lang={l.code}
-              >
-                {l.label}
-              </button>
-            ))}
+          <div className="hero-copy">
+            <h1 className="tagline">{t(lang, 'tagline')}</h1>
+            {lang !== 'en' && (
+              <p className="tagline-en" lang="en">
+                {t('en', 'tagline')}
+              </p>
+            )}
+            {/* Language names stay in their own script, even under browser page-translation. */}
+            <div className="lang-switch" role="radiogroup" aria-label={t(lang, 'chooseLanguage')} translate="no">
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  role="radio"
+                  aria-checked={lang === l.code}
+                  className={`lang ${lang === l.code ? 'lang-on' : ''} notranslate`}
+                  onClick={() => setLang(l.code)}
+                  lang={l.code}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <MicButton label={t(lang, 'tapToSpeak')} onClick={startInterview} />
-
-          {!(hasSpeechRecognition() && isSecureForMic()) && (
-            <p className="warning" role="alert">
-              {t(lang, 'unsupportedBrowser')}
-            </p>
-          )}
+          <div className="hero-action">
+            <div className="mic-rings">
+              <MicButton label={t(lang, 'tapToSpeak')} onClick={startInterview} />
+            </div>
+            {!(hasSpeechRecognition() && isSecureForMic()) && (
+              <p className="warning" role="alert">
+                {t(lang, 'unsupportedBrowser')}
+              </p>
+            )}
+          </div>
         </section>
 
         <HowItWorks lang={lang} />
@@ -137,12 +142,14 @@ export default function Home({ lang, setLang, config }) {
 
         <section className="sample-box">
           <p>{t(lang, 'trySampleHelp')}</p>
-          <button type="button" className="btn btn-primary btn-big" onClick={startSample}>
-            {t(lang, 'trySample')}
-          </button>
-          <button type="button" className="btn btn-big" onClick={skipToApproved} disabled={skip === 'busy'} aria-busy={skip === 'busy'}>
-            {skip === 'busy' ? t(lang, 'opening') : t(lang, 'skipToApproved')}
-          </button>
+          <div className="sample-actions">
+            <button type="button" className="btn btn-primary btn-big" onClick={startSample}>
+              {t(lang, 'trySample')}
+            </button>
+            <button type="button" className="btn btn-big" onClick={skipToApproved} disabled={skip === 'busy'} aria-busy={skip === 'busy'}>
+              {skip === 'busy' ? t(lang, 'opening') : t(lang, 'skipToApproved')}
+            </button>
+          </div>
           {skip === 'failed' && (
             <p className="keyboard-error" role="alert">
               {t(lang, 'skipFailed')}

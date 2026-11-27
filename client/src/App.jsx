@@ -34,9 +34,10 @@ export default function App() {
   return (
     <div className={`app ${wide ? 'app-wide' : ''}`}>
       <header className="topbar">
-        <Link to="/" className="brand" aria-label="Arzi home">
-          <span className="brand-mark" aria-hidden="true">अ</span>
-          <span className="brand-name">Arzi</span>
+        {/* translate="no": browser page-translation must not turn the logo into words */}
+        <Link to="/" className="brand" aria-label="Arzi home" translate="no">
+          <span className="brand-mark notranslate" aria-hidden="true">अ</span>
+          <span className="brand-name notranslate">arzi</span>
         </Link>
         {!wide && (
           <Link to="/history" className="nav-link">
