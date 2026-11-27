@@ -2,7 +2,7 @@
  * Guidelines: clarity, deference to content, depth through layout, not decoration).
  *
  * Palette
- *   grouped  — light grey page background; content sits on white grouped cards
+ *   paper    — warm cream page background; content sits on white grouped cards
  *   ink      — primary text;  secondary — grey for supporting text
  *   separator— hairlines instead of borders and shadows
  *   accent   — the violet of Indian rubber-stamp ink, used sparingly: primary
@@ -15,7 +15,7 @@
  *   Phone scale: title 28 · headline 20 · body 17 · secondary 15 · note 13.
  */
 :root {
-  --paper: #f2f2f7;
+  --paper: #f8f4ec;
   --surface: #ffffff;
   --fill: rgba(118, 118, 128, 0.12);
   --fill-strong: rgba(118, 118, 128, 0.2);
