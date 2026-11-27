@@ -37,6 +37,7 @@ const sarvamServer = http.createServer((req, res) => {
             depositAmount: { amount: '18500' },
             movedOutDate: { iso: '2099-01-01', precision: 'day' },
             landlordName: { text: '' },
+            landlordAddress: { text: 'same' }, // a placeholder, not an address → must be asked
             dueDate: { kind: 'duration', value: 2, unit: 'month' },
           },
           facts: [

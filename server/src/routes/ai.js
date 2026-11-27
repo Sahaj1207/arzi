@@ -10,7 +10,7 @@
 //   POST /api/ai/intent   { userId, lang, text, aiConsent }        → { intent }
 //   POST /api/ai/story    { userId, lang, text, aiConsent }        → { fields, facts }
 import express, { Router } from 'express';
-import { FIELDS, getField, isValidFieldValue, LANGUAGES } from '@arzi/shared';
+import { FIELDS, getField, isValidFieldValue, LANGUAGES, SAME_ADDRESS_WORDS } from '@arzi/shared';
 import { synthesize, chat, sarvamConfigured } from '../providers/sarvam.js';
 import { ProviderError } from '../providers/errors.js';
 import { transcribeWithFallback, sttChain } from '../providers/speech.js';
@@ -164,6 +164,9 @@ aiRouter.post('/intent', async (req, res) => {
 // for the read-back. Nothing is guessed; the citizen confirms everything, and the
 // advocate checks the notice.
 const LANG_NAME = { hi: 'Hindi', mr: 'Marathi', en: 'English', te: 'Telugu' };
+// "same", "unknown", "N/A"… are not a name or an address: ask the question instead.
+const PLACEHOLDER = new Set(['unknown', 'not known', 'n/a', 'na', 'none', 'nil', '-', ...SAME_ADDRESS_WORDS.map((w) => w.toLowerCase())]);
+const isPlaceholder = (v) => typeof v.text === 'string' && PLACEHOLDER.has(v.text.trim().toLowerCase().replace(/[.।]+$/u, ''));
 const factText = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 240);
 
 aiRouter.post('/story', async (req, res) => {
@@ -184,7 +187,8 @@ aiRouter.post('/story', async (req, res) => {
             `Today is ${today}. Dates are in the past. Indian numbering: hazaar/వేలు = thousand, lakh = 100,000.\n` +
             'Reply with JSON only: {"fields": {...}, "facts": [...]}.\n' +
             `"fields": include ONLY the details the person clearly said, with these shapes:\n${shapes}\n` +
-            'Names and addresses exactly as said, in the same script. Leave out anything not clearly said. Never guess.\n' +
+            'Names and addresses exactly as said, in the same script. Leave out anything not clearly said. Never guess. ' +
+            'Never use placeholders such as "same", "unknown" or "N/A": leave the detail out instead.\n' +
             '"facts": up to 4 other facts from the story that matter for a legal notice about the deposit ' +
             "(the landlord's reason or excuse for not paying, deductions claimed, damage alleged, promises to pay, " +
             'when the person asked for the money). Do NOT repeat the 7 details above. Each fact: ' +
@@ -199,7 +203,7 @@ aiRouter.post('/story', async (req, res) => {
     const fields = {};
     for (const f of FIELDS) {
       const v = normalizeValue(f, data.fields?.[f.id], today);
-      if (v) fields[f.id] = v;
+      if (v && !isPlaceholder(v)) fields[f.id] = v;
     }
     const facts = (Array.isArray(data.facts) ? data.facts : [])
       .map((x) => ({ en: factText(x?.en), local: factText(x?.local) }))
