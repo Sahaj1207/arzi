@@ -17,7 +17,6 @@ const safe = (storage) => ({
   },
 });
 const local = safe('localStorage');
-const session = safe('sessionStorage');
 
 // Reading speed for Arzi's voice (read-back "slower / faster"), kept on this device.
 const RATE_KEY = 'arzi.speechRate';
@@ -34,23 +33,11 @@ export function setRate(r) {
   return v;
 }
 
-// Languages still in translation review (Telugu) are hidden unless this device
-// opened the tester link once: https://<site>/?telugu=1   (turn off: ?telugu=0)
-const REVIEW_KEY = 'arzi.reviewLanguages';
-export function readReviewFlagFromUrl() {
-  try {
-    const v = new URLSearchParams(window.location.search).get('telugu');
-    if (v === '1') local.set(REVIEW_KEY, '1');
-    if (v === '0') local.set(REVIEW_KEY, '');
-  } catch {
-    /* no URL */
-  }
+// Did the citizen tick "I agree my voice and details are processed by …" on the
+// home screen? Remembered on this device (one-time). 'yes' | 'no' (not ticked).
+const AI_KEY = 'arzi.aiConsentBox';
+export const getAiConsent = () => (local.get(AI_KEY) === 'yes' ? 'yes' : 'no');
+export function setAiConsent(yes) {
+  local.set(AI_KEY, yes ? 'yes' : 'no');
+  window.dispatchEvent(new CustomEvent('arzi:ai-consent'));
 }
-export const reviewLanguagesOn = () => local.get(REVIEW_KEY) === '1';
-export const isLanguageVisible = (l) => !l.review || reviewLanguagesOn();
-
-// Did the citizen allow outside AI services (Sarvam / Anthropic) in this session?
-// 'yes' | 'no' | null (not asked yet). Session only: asked again next visit.
-const AI_KEY = 'arzi.aiConsent';
-export const getAiConsent = () => session.get(AI_KEY);
-export const setAiConsent = (yes) => session.set(AI_KEY, yes ? 'yes' : 'no');

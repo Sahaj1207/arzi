@@ -14,7 +14,7 @@ import EmergencyPanel from './EmergencyPanel.jsx';
 
 export default function FixDetails({ doc, note, onDone, onCancel }) {
   const [lang, setLang] = useState(doc.language);
-  const { view, start, respond, reset } = useInterview({ lang, setLang });
+  const { view, start, respond, reset, interrupt, finishListening } = useInterview({ lang, setLang });
   const [save, setSave] = useState(null);
 
   // Started by the "Fix my details" tap, so the browser allows speech.
@@ -45,7 +45,7 @@ export default function FixDetails({ doc, note, onDone, onCancel }) {
   return (
     <section className="fix">
       <h2>{t(lang, 'fixTitle')}</h2>
-      <InterviewView lang={lang} view={view} respond={respond} />
+      <InterviewView lang={lang} view={view} respond={respond} interrupt={interrupt} finishListening={finishListening} />
       {save === 'saving' && <p className="muted">{t(lang, 'saving')}</p>}
       {save === 'failed' && (
         <div className="save-failed" role="alert">

@@ -1,5 +1,5 @@
 // What the server says is available (from /api/config), and whether this
-// session may use outside AI services (Sarvam): only after the citizen said yes.
+// session may use outside AI services: only when the home-screen box is ticked.
 import { api } from './api.js';
 import { getUserId } from './userId.js';
 import { getAiConsent } from './prefs.js';
@@ -34,6 +34,19 @@ export async function aiExtract(field, text, lang) {
     return null;
   }
   return r.data.value ?? null;
+}
+
+// AI mode: everything already in the problem story. Returns
+// { fields: { <fieldId>: value }, facts: [{ en, local }] } or null. Values are
+// still read back to the citizen in one summary and confirmed.
+export async function aiStory(text, lang) {
+  if (!llmUp()) return null;
+  const r = await api('/ai/story', { method: 'POST', body: { userId: getUserId(), lang, text, aiConsent: 'yes' } });
+  if (!r.ok) {
+    if (r.status !== 400) markAiFailed('llm', r.error);
+    return null;
+  }
+  return r.data ?? null;
 }
 
 // LLM help when keywords did not recognise the problem. 'deposit' | 'emergency' | 'other' | null.

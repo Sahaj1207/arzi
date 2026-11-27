@@ -27,7 +27,26 @@ const sarvamServer = http.createServer((req, res) => {
     }
     if (req.url === '/v1/chat/completions') {
       const ask = JSON.parse(body).messages.at(-1).content;
-      const content = /Classify/.test(JSON.parse(body).messages[0].content)
+      const system = JSON.parse(body).messages[0].content;
+      if (/story of an Indian tenant/.test(system)) {
+        // One good name, one amount as words-turned-number, one FUTURE date (must be dropped),
+        // one garbage field, two facts (one too short to keep).
+        const story = {
+          fields: {
+            tenantName: { text: 'प्रिया शर्मा' },
+            depositAmount: { amount: '18500' },
+            movedOutDate: { iso: '2099-01-01', precision: 'day' },
+            landlordName: { text: '' },
+            dueDate: { kind: 'duration', value: 2, unit: 'month' },
+          },
+          facts: [
+            { en: 'The owner says he will cut ₹3,000 for cleaning.', local: 'मालिक कहते हैं सफ़ाई के ₹3,000 काटेंगे।' },
+            { en: 'ok', local: 'ok' },
+          ],
+        };
+        return send(200, { choices: [{ message: { role: 'assistant', content: '```json\n' + JSON.stringify(story) + '\n```' } }] });
+      }
+      const content = /Classify/.test(system)
         ? '{"intent": "deposit"}'
         : /ek lakh se thoda kam/.test(ask)
           ? 'Sure! ```json\n{"value": null}\n```'
@@ -124,4 +143,35 @@ test('with consent, names and addresses are transliterated for the English notic
   // Without consent: no Sarvam call, original script in the notice.
   const plain = await post('/documents', { userId: U(7), lang: 'hi', fields, aiConsent: false }).then((r) => r.json());
   assert.match(plain.version.notice, /From:\nप्रिया शर्मा/);
+});
+
+test('story (AI): every clear detail + extra facts from the whole story; bad values dropped', async () => {
+  const r = await post('/ai/story', { userId: U(8), lang: 'hi', text: 'मेरा नाम प्रिया शर्मा है, साढ़े अठारह हज़ार डिपॉज़िट था…', aiConsent: 'yes' });
+  assert.equal(r.status, 200);
+  const { fields, facts } = await r.json();
+  assert.deepEqual(Object.keys(fields).sort(), ['depositAmount', 'dueDate', 'tenantName']);
+  assert.deepEqual(fields.depositAmount, { amount: 18500 });
+  assert.equal(fields.dueDate.kind, 'duration');
+  assert.equal(fields.dueDate.days, 60);
+  assert.deepEqual(facts, [{ en: 'The owner says he will cut ₹3,000 for cleaning.', local: 'मालिक कहते हैं सफ़ाई के ₹3,000 काटेंगे।' }]);
+
+  const denied = await post('/ai/story', { userId: U(8), lang: 'hi', text: 'x', aiConsent: 'no' });
+  assert.equal(denied.status, 403);
+});
+
+test('story facts reach the notice with consent, survive a redraft, and are ignored without consent', async () => {
+  const facts = [{ en: 'The owner says he will cut ₹3,000 for cleaning.', local: 'मालिक कहते हैं सफ़ाई के ₹3,000 काटेंगे।' }];
+  const doc = await post('/documents', { userId: U(9), lang: 'hi', fields: FIELDS_OK, facts, aiConsent: true }).then((x) => x.json());
+  assert.match(doc.version.notice, /4\. I further state that: The owner says he will cut ₹3,000 for cleaning\./);
+  assert.match(doc.version.summary, /सफ़ाई के ₹3,000/);
+
+  // Advocate asks for changes → citizen fixes the amount → version 2 keeps the facts.
+  const pin = { 'Content-Type': 'application/json', 'X-Advocate-Pin': '1234' };
+  await fetch(`${s.base}/advocate/documents/${doc.id}/request-changes`, { method: 'POST', headers: pin, body: JSON.stringify({ note: 'Check the amount' }) });
+  const v2 = await post(`/documents/${doc.id}/revise`, { userId: U(9), fields: { ...FIELDS_OK, depositAmount: { amount: 20000 } } }).then((x) => x.json());
+  assert.equal(v2.version.no, 2);
+  assert.match(v2.version.notice, /I further state that: The owner says he will cut ₹3,000/);
+
+  const plain = await post('/documents', { userId: U(10), lang: 'hi', fields: FIELDS_OK, facts, aiConsent: false }).then((x) => x.json());
+  assert.doesNotMatch(plain.version.notice, /further state/);
 });

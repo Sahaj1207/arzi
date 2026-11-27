@@ -5,7 +5,7 @@
 // If every server service fails (out of credits, rate limit, down), the session
 // switches to browser speech for good and the interview asks the question again.
 import { createBrowserStt } from './browserStt.js';
-import { createServerStt } from './serverStt.js';
+import { createServerStt, prepareMic, releaseMic } from './serverStt.js';
 import { getRuntimeConfig, aiServiceUp, markAiFailed } from '../lib/ai.js';
 
 const browser = createBrowserStt();
@@ -45,3 +45,23 @@ export function fallBackToBrowser(reason) {
   markAiFailed('stt', reason);
 }
 
+// Called on the first mic tap (a user gesture), while Arzi is still greeting:
+// the browser asks for mic permission now instead of after the greeting, and the
+// server path keeps the stream open so recording starts instantly.
+export function warmUpMic() {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) return;
+  if (useServer()) {
+    prepareMic().catch(() => {}); // a refusal shows up at the first listen
+    return;
+  }
+  // Browser speech opens the mic itself; we only need the permission early.
+  navigator.mediaDevices
+    .getUserMedia({ audio: true })
+    .then((s) => s.getTracks().forEach((t) => t.stop()))
+    .catch(() => {});
+}
+
+// End of the interview: let go of the microphone (the phone's mic indicator turns off).
+export function coolDownMic() {
+  releaseMic();
+}

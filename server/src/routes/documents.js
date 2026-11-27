@@ -26,6 +26,15 @@ const USER_ID = /^[A-Za-z0-9-]{8,64}$/;
 
 const bad = (res, error, status = 400) => res.status(status).json({ error });
 
+// Extra facts from the story (AI mode): at most 4 short plain sentences.
+function cleanFacts(facts) {
+  if (!Array.isArray(facts)) return [];
+  return facts
+    .map((x) => ({ en: String(x?.en ?? '').trim().slice(0, 240), local: String(x?.local ?? '').trim().slice(0, 240) }))
+    .filter((x) => x.en && x.local)
+    .slice(0, 4);
+}
+
 function cleanTranscript(transcript) {
   if (!Array.isArray(transcript)) return [];
   return transcript.slice(0, 200).map((e) => ({
@@ -119,9 +128,12 @@ export const getDocumentRow = (id) => getDoc.get(id);
 // Saves a new notice (fields already validated) and drafts version 1.
 // Used by the interview, the sample case and the startup seed.
 // ai: { userId, ip } when the citizen agreed to AI services (enables name transliteration).
-export async function createDocument({ id = randomUUID(), userId, lang, problem = '', transcript = [], fields, isSample = false, meta = {}, ai = null }) {
+// facts: extra facts from the story (AI mode only); kept with the transcript so a
+// redraft after "Request changes" keeps them.
+export async function createDocument({ id = randomUUID(), userId, lang, problem = '', transcript = [], fields, facts = [], isSample = false, meta = {}, ai = null }) {
   const clean = Object.fromEntries(FIELDS.map((f) => [f.id, fields[f.id]]));
-  const draft = await draftDocument({ fields: clean, lang, ai });
+  const storyFacts = cleanFacts(facts);
+  const draft = await draftDocument({ fields: clean, lang, ai, facts: storyFacts });
   db.transaction(() => {
     ensureUser.run(userId);
     insertDoc.run({
@@ -130,7 +142,7 @@ export async function createDocument({ id = randomUUID(), userId, lang, problem 
       kind: 'deposit_notice',
       lang,
       status: 'pending_review',
-      transcript: JSON.stringify({ problem: String(problem).slice(0, 4000), entries: cleanTranscript(transcript), ...meta }),
+      transcript: JSON.stringify({ problem: String(problem).slice(0, 4000), entries: cleanTranscript(transcript), storyFacts, ...meta }),
       fields: JSON.stringify(clean),
       isSample: isSample ? 1 : 0,
     });
@@ -142,7 +154,7 @@ export async function createDocument({ id = randomUUID(), userId, lang, problem 
 // ---------- routes ----------
 documentsRouter.post('/', async (req, res, next) => {
   try {
-    const { userId, lang, problem = '', transcript, fields, sample = false, aiConsent = null } = req.body ?? {};
+    const { userId, lang, problem = '', transcript, fields, facts = [], sample = false, aiConsent = null } = req.body ?? {};
     if (!USER_ID.test(userId ?? '')) return bad(res, 'invalid_user');
     if (!LANG_CODES.has(lang)) return bad(res, 'invalid_language');
     if (!fields || typeof fields !== 'object') return bad(res, 'missing_fields');
@@ -155,6 +167,8 @@ documentsRouter.post('/', async (req, res, next) => {
       problem,
       transcript,
       fields,
+      // Story facts come from the AI, so only with the citizen's consent.
+      facts: aiConsent === true ? facts : [],
       isSample: sample === true,
       // Whether the citizen allowed outside AI services this session (null = never asked: no keys).
       meta: { aiConsent: typeof aiConsent === 'boolean' ? aiConsent : null },
@@ -193,10 +207,10 @@ documentsRouter.post('/:id/revise', async (req, res, next) => {
       if (!isValidFieldValue(f, fields[f.id])) return bad(res, `invalid_field:${f.id}`);
     }
     const clean = Object.fromEntries(FIELDS.map((f) => [f.id, fields[f.id]]));
-    const ai = JSON.parse(row.transcript || '{}').aiConsent === true ? { userId, ip: req.ip } : null;
-    const draft = await draftDocument({ fields: clean, lang: row.language, ai });
-
     const stored = JSON.parse(row.transcript || '{}');
+    const ai = stored.aiConsent === true ? { userId, ip: req.ip } : null;
+    const draft = await draftDocument({ fields: clean, lang: row.language, ai, facts: stored.storyFacts ?? [] });
+
     stored.entries = [...(stored.entries ?? []), ...cleanTranscript(transcript)].slice(-400);
     const nextNo = (latestVersion.get(row.id)?.version_no ?? 0) + 1;
 

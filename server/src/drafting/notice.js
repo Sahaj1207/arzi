@@ -16,7 +16,9 @@ function dueSentence(due) {
   return `The said deposit was due to be refunded to me ${on(due)}.`;
 }
 
-export function buildNotice(fields, { today = new Date() } = {}) {
+// facts: extra facts from the citizen's story (AI mode), [{ en }]. They get their
+// own numbered paragraph after the facts of the deposit; the advocate checks them.
+export function buildNotice(fields, { today = new Date(), facts = [] } = {}) {
   const tenant = fields.tenantName.text;
   const premises = fields.tenantAddress.text;
   const landlord = fields.landlordName.text;
@@ -24,6 +26,17 @@ export function buildNotice(fields, { today = new Date() } = {}) {
   const amount = fields.depositAmount.amount;
   const money = `${formatINR(amount)} (Rupees ${amountInWordsEn(amount)} only)`;
   const dated = formatDate(today.toISOString().slice(0, 10), 'en');
+  const sentence = (s) => s.trim().replace(/[.\s]*$/, '.');
+
+  const paragraphs = [
+    `I, ${tenant}, was your tenant at the premises situated at ${premises} (“the premises”). I paid you a refundable security deposit of ${money} in respect of the premises.`,
+    `I vacated the premises ${on(fields.movedOutDate)}.`,
+    `${dueSentence(fields.dueDate)} Despite this, you have not refunded the security deposit to me till date.`,
+    ...(facts.length ? [`I further state that: ${facts.map((x) => sentence(x.en)).join(' ')}`] : []),
+    'You have no lawful reason to keep my security deposit. Withholding it is wrongful, and the full amount is payable to me.',
+    `I therefore call upon you to pay me the sum of ${money} within ${DAYS_TO_PAY} (fifteen) days from the date of receipt of this notice.`,
+    `Please take notice that if you fail to pay the said amount within ${DAYS_TO_PAY} days, I shall be constrained to initiate appropriate legal proceedings against you for its recovery, entirely at your risk as to costs and consequences. I reserve my right to claim interest and the costs of legal proceedings in such proceedings.`,
+  ];
 
   return [
     'LEGAL NOTICE',
@@ -43,18 +56,7 @@ export function buildNotice(fields, { today = new Date() } = {}) {
     '',
     'Sir/Madam,',
     '',
-    `1. I, ${tenant}, was your tenant at the premises situated at ${premises} (“the premises”). I paid you a refundable security deposit of ${money} in respect of the premises.`,
-    '',
-    `2. I vacated the premises ${on(fields.movedOutDate)}.`,
-    '',
-    `3. ${dueSentence(fields.dueDate)} Despite this, you have not refunded the security deposit to me till date.`,
-    '',
-    '4. You have no lawful reason to keep my security deposit. Withholding it is wrongful, and the full amount is payable to me.',
-    '',
-    `5. I therefore call upon you to pay me the sum of ${money} within ${DAYS_TO_PAY} (fifteen) days from the date of receipt of this notice.`,
-    '',
-    `6. Please take notice that if you fail to pay the said amount within ${DAYS_TO_PAY} days, I shall be constrained to initiate appropriate legal proceedings against you for its recovery, entirely at your risk as to costs and consequences. I reserve my right to claim interest and the costs of legal proceedings in such proceedings.`,
-    '',
+    ...paragraphs.flatMap((p, i) => [`${i + 1}. ${p}`, '']),
     'Yours faithfully,',
     '',
     tenant,

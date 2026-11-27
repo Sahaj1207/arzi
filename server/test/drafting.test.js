@@ -59,3 +59,21 @@ test('summary: 5 points in the user’s language', () => {
   assert.match(buildSummary(FIELDS_OK, 'hi'), /15 मार्च 2026 को घर छोड़ा/);
   assert.match(buildSummary(FIELDS_OK, 'mr'), /15 मार्च 2026 रोजी घर सोडले/);
 });
+
+test('story facts (AI mode): own numbered paragraph in the notice, own point in the summary', () => {
+  const facts = [
+    { en: 'You said you would deduct ₹5,000 for painting', local: 'मालिक ने कहा कि पेंटिंग के लिए ₹5,000 काटेंगे' },
+    { en: 'I asked for the deposit on 1 October 2026.', local: 'मैंने 1 अक्टूबर 2026 को डिपॉज़िट माँगा।' },
+  ];
+  const n = buildNotice(FIELDS_OK, { today, facts });
+  assert.match(n, /\n4\. I further state that: You said you would deduct ₹5,000 for painting\. I asked for the deposit on 1 October 2026\.\n/);
+  assert.match(n, /\n5\. You have no lawful reason/);
+  assert.match(n, /\n7\. Please take notice/);
+  assert.doesNotMatch(buildNotice(FIELDS_OK, { today }), /further state/); // demo mode: unchanged, 6 paragraphs
+  assert.match(buildNotice(FIELDS_OK, { today }), /\n6\. Please take notice/);
+
+  const hi = buildSummary(FIELDS_OK, 'hi', facts).split('\n');
+  assert.equal(hi.length, 6);
+  assert.equal(hi[2], 'इसमें आपकी बताई ये बातें भी लिखी हैं: मालिक ने कहा कि पेंटिंग के लिए ₹5,000 काटेंगे; मैंने 1 अक्टूबर 2026 को डिपॉज़िट माँगा।');
+  assert.equal(buildSummary(FIELDS_OK, 'hi').split('\n').length, 5);
+});

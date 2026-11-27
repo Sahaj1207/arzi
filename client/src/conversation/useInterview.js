@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { t } from '@arzi/shared';
 import { runInterview } from './interview.js';
 import { ask as voiceAsk } from '../voice/ask.js';
-import { getSpeechProvider } from '../voice/speechProvider.js';
+import { getSpeechProvider, warmUpMic, coolDownMic } from '../voice/speechProvider.js';
 import { speak, stopSpeaking } from '../voice/tts.js';
 
 const INITIAL = {
@@ -29,6 +29,7 @@ export function useInterview({ lang, setLang }) {
   const langRef = useRef(lang);
   const abortRef = useRef(null);
   const waiterRef = useRef(null); // resolves when the user taps "continue" / types / taps mic
+  const finishRef = useRef(null); // AbortController: "I'm done talking" for the current listen
 
   useEffect(() => {
     langRef.current = lang;
@@ -48,10 +49,16 @@ export function useInterview({ lang, setLang }) {
     resolve?.(input);
   }, []);
 
+  // Mic tap while Arzi is talking: stop talking and listen right away.
+  const interrupt = useCallback(() => stopSpeaking(), []);
+  // Mic tap while listening: the answer is complete, use what was heard.
+  const finishListening = useCallback(() => finishRef.current?.abort(), []);
+
   const stop = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
     stopSpeaking();
+    coolDownMic();
     respond({ aborted: true });
   }, [respond]);
 
@@ -63,7 +70,18 @@ export function useInterview({ lang, setLang }) {
   // instead of speaking, so a question takes ~3 s, not ~10 s).
   const start = useCallback(async (runner = runInterview, { provider: fixedProvider, speakWith } = {}) => {
     stop();
-    const providerFor = () => fixedProvider ?? getSpeechProvider();
+    if (!fixedProvider) warmUpMic(); // ask for the mic now (we are inside the tap)
+    // Every listen gets its own "done" switch (the mic tap while listening).
+    const track = (p) => ({
+      name: p.name,
+      isSupported: () => p.isSupported(),
+      listen: (o) => {
+        const fc = new AbortController();
+        finishRef.current = fc;
+        return p.listen({ ...o, finishSignal: fc.signal });
+      },
+    });
+    const providerFor = () => track(fixedProvider ?? getSpeechProvider());
     const ac = new AbortController();
     abortRef.current = ac;
     const { signal } = ac;
@@ -89,7 +107,8 @@ export function useInterview({ lang, setLang }) {
         // (The sample case's quick "speak" just pauses long enough to read.)
         if (!signal.aborted) patch({ phase: 'idle' });
       },
-      ask: async ({ prompt, parse, keyboard }) => {
+      // long: the problem story; listen until a ~3 s pause or the "done" tap, up to 2 minutes.
+      ask: async ({ prompt, parse, keyboard, long = false }) => {
         let useKeyboard = keyboard || !providerFor().isSupported();
         let reason = keyboard ? null : 'unsupportedBrowser';
         let promptSpoken = false;
@@ -105,6 +124,7 @@ export function useInterview({ lang, setLang }) {
               provider: providerFor(),
               speak: speakTracked,
               signal,
+              listenOptions: long ? { long: true, endPauseMs: 3000 } : {},
               onState: (s) => !signal.aborted && patch(s),
             });
             if (r.status === 'answer') {
@@ -149,6 +169,7 @@ export function useInterview({ lang, setLang }) {
     };
 
     const outcome = await runner(io);
+    coolDownMic();
     if (!signal.aborted) patch({ running: false, outcome, phase: 'idle' });
     return outcome;
   }, [patch, setLang, stop]);
@@ -158,5 +179,5 @@ export function useInterview({ lang, setLang }) {
     setView(INITIAL);
   }, [stop]);
 
-  return { view, start, respond, reset };
+  return { view, start, respond, reset, interrupt, finishListening };
 }

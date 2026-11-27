@@ -1,7 +1,7 @@
 // The 7 facts Arzi collects for a deposit notice, in the order it asks for them.
 // `type` decides which parser reads the answer and how it is shown and read back.
 // `advocateLabel` is the wording on the advocate's desk; `label` is the citizen's.
-// Telugu (te) text is awaiting review by a Telugu speaker: see docs/telugu-review.md.
+// Telugu (te) text was checked by a Telugu speaker (docs/telugu-review.md).
 export const FIELDS = [
   {
     id: 'tenantName',

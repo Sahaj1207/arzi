@@ -1,5 +1,5 @@
 // Telugu (te) — every line Arzi shows or speaks.
-// STATUS: DRAFT, awaiting review by a Telugu speaker (see docs/telugu-review.md).
+// STATUS: reviewed by a Telugu speaker (2026-11-28); lines added after that are marked.
 // Style: polite "మీరు" form, plain everyday words; "లాయర్" for advocate (as people say it).
 // Any key missing here falls back to English automatically.
 export const TE = {
@@ -76,10 +76,16 @@ export const TE = {
   step: 'ప్రశ్న {n} / {total}',
   sameAsAbove: '(అద్దె ఇంటి చిరునామానే)',
   yourAnswers: 'మీ సమాధానాలు',
-  aiConsentAsk:
-    'మొదలుపెట్టే ముందు: మిమ్మల్ని బాగా అర్థం చేసుకోవడానికి, అర్జీ మీ మాటలను బయటి AI సేవలకు ({providers}) పంపగలదు. అది సరేనా? అవును లేదా కాదు అని చెప్పండి.',
-  aiConsentYes: 'ధన్యవాదాలు.',
-  aiConsentNo: 'సరే. నేను బయటి AI సేవను ఉపయోగించను.',
+  // Faster mic, whole-story listening, consent checkbox (added after the review: please check)
+  tapToAnswer: 'ఇప్పుడే జవాబు చెప్పడానికి నొక్కండి',
+  tapWhenDone: 'వింటున్నాను… పూర్తయ్యాక నొక్కండి',
+  and: 'మరియు',
+  aiConsentCheck: 'నా పత్రం తయారు చేయడానికి నా గొంతు, వివరాలను {providers} ప్రాసెస్ చేయడానికి నేను అంగీకరిస్తున్నాను.',
+  aiConsentHelp: 'టిక్ చేయకపోతే, అర్జీ మీ బ్రౌజర్ ఉచిత వాయిస్ గుర్తింపు, సాధారణ డ్రాఫ్ట్‌ను వాడుతుంది.',
+  storyNoted: 'మీరు చెప్పిన దాని నుండి నేను ఇది రాసుకున్నాను:',
+  storyFacts: 'ఇది కూడా రాసుకున్నాను: {facts}',
+  storyAsk: 'ఇది సరైనదేనా? అవును అనండి, లేదా ఏమి మార్చాలో చెప్పండి.',
+  storyRest: 'ఇప్పుడు ఇంకొన్ని ప్రశ్నలు.',
 
   // Sample case
   sampleBanner: 'నమూనా కేసు: సమాధానాలు మాట్లాడినట్లుగా వాటంతట అవే టైప్ అవుతున్నాయి.',

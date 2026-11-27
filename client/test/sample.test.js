@@ -45,7 +45,7 @@ for (const lang of ['en', 'hi', 'mr', 'te']) {
     assert.deepEqual(r.fields.dueDate, { kind: 'date', iso: '2026-09-30', precision: 'day' });
     assert.ok(/Priya Sharma|प्रिया शर्मा|ప్రియా శర్మ/.test(r.fields.tenantName.text));
     assert.ok(/Rajesh Gupta|राजेश गुप्ता|రాజేష్ గుప్తా/.test(r.fields.landlordName.text));
-    assert.equal(r.aiConsent, null); // never asked in the sample
+    assert.deepEqual(r.facts, []); // demo mode: no story facts
   });
 }
 
@@ -63,24 +63,74 @@ test('scripted provider shows words one by one and can be cancelled', async () =
   assert.equal((await pending).status, 'aborted');
 });
 
-test('AI consent: asked first when an AI service is configured; "no" is respected', async () => {
-  const answers = ['no', ...SAMPLE_SCRIPT.en];
-  const io = scriptedIo('en', answers);
-  let stored = null;
-  io.onAiConsent = (v) => (stored = v);
-  const r = await runInterview(io, { today, askAiConsent: true, aiProviders: 'Sarvam AI, Groq' });
-  assert.match(io.asked[0], /send your voice and words to outside AI services \(Sarvam AI, Groq\)/);
-  assert.equal(r.aiConsent, false);
-  assert.equal(stored, false);
-  assert.ok(io.said.includes('Okay. I will not use any outside AI service.'));
-  assert.equal(r.outcome, 'ready');
+// ---- AI mode: the whole story first, then only what is missing ----
+const STORY_FIELDS = {
+  tenantName: { text: 'Priya Sharma' },
+  depositAmount: { amount: 25000 },
+  landlordName: { text: 'Rajesh Gupta' },
+};
+const STORY_FACTS = [{ en: 'The landlord says he will deduct ₹5,000 for painting.', local: 'The landlord says he will deduct ₹5,000 for painting.' }];
+
+test('story: the problem is heard as one long answer; demo mode asks all 7 questions', async () => {
+  const io = scriptedIo('en', SAMPLE_SCRIPT.en);
+  const longs = [];
+  const ask = io.ask;
+  io.ask = (o) => (longs.push(Boolean(o.long)), ask(o));
+  await runInterview(io, { today });
+  assert.equal(longs[0], true, 'the first question (describe the problem) listens long');
+  assert.ok(longs.slice(1).every((x) => !x), 'other answers are short');
+  assert.equal(io.asked.filter((q) => /What is your full name/.test(q)).length, 1);
 });
 
-test('AI consent: "yes" is recorded; not asked when no AI service', async () => {
-  const io = scriptedIo('hi', ['हाँ', ...SAMPLE_SCRIPT.hi]);
-  const r = await runInterview(io, { today, askAiConsent: true, aiProviders: 'Sarvam AI, Groq' });
-  assert.equal(r.aiConsent, true);
-  const plain = scriptedIo('hi', SAMPLE_SCRIPT.hi);
-  await runInterview(plain, { today });
-  assert.doesNotMatch(plain.asked[0], /AI/);
+test('story (AI): details from the story are confirmed in one summary; only missing ones are asked', async () => {
+  const [problem, , ...answers] = SAMPLE_SCRIPT.en; // drop "yes" (deposit) — re-added below
+  const byQuestion = {
+    address: 'Room 12, Shanti PG, Kothrud, Pune 411038',
+    landlordAddress: 'same',
+    movedOut: '15 September 2026',
+    due: '30 September 2026',
+  };
+  // problem → yes (deposit) → yes (story summary) → missing fields with yes after each → yes (final summary)
+  const script = [problem, 'yes', 'yes', byQuestion.address, 'yes', byQuestion.landlordAddress, 'yes', byQuestion.movedOut, 'yes', byQuestion.due, 'yes', 'yes'];
+  const io = scriptedIo('en', script);
+  let storyText = null;
+  const r = await runInterview(io, {
+    today,
+    aiStory: async (text) => ((storyText = text), { fields: STORY_FIELDS, facts: STORY_FACTS }),
+  });
+  assert.equal(io.rejected, 0);
+  assert.equal(r.outcome, 'ready');
+  assert.equal(storyText, problem);
+  assert.ok(io.said.some((x) => /From what you told me, I noted:.*Priya Sharma.*Rajesh Gupta.*₹25,000.*I also noted: The landlord says he will deduct ₹5,000 for painting/.test(x)));
+  assert.ok(io.asked.includes('Is that right? Say yes, or say what to change.'));
+  // Never asked again for what the story already said:
+  assert.ok(!io.asked.some((q) => /What is your full name|How much security deposit|full name of your landlord/.test(q)));
+  assert.equal(r.fields.tenantName.text, 'Priya Sharma');
+  assert.equal(r.fields.depositAmount.amount, 25000);
+  assert.deepEqual(r.fields.movedOutDate, { iso: '2026-09-15', precision: 'day' });
+  assert.deepEqual(r.facts, STORY_FACTS);
+  void answers;
+});
+
+test('story (AI): "change the amount" in the story summary asks just that again', async () => {
+  const all = {
+    ...STORY_FIELDS,
+    tenantAddress: { text: 'Room 12, Pune' },
+    landlordAddress: { text: 'Room 12, Pune', same: true },
+    movedOutDate: { iso: '2026-09-15', precision: 'day' },
+    dueDate: { kind: 'date', iso: '2026-09-30', precision: 'day' },
+  };
+  const io = scriptedIo('en', [SAMPLE_SCRIPT.en[0], 'yes', 'change the amount', '20000', 'yes', 'yes']);
+  const r = await runInterview(io, { today, aiStory: async () => ({ fields: all, facts: [] }) });
+  assert.equal(r.outcome, 'ready');
+  assert.equal(r.fields.depositAmount.amount, 20000);
+  // Everything came from the story: no separate final summary.
+  assert.equal(io.asked.filter((q) => /Is everything correct/.test(q)).length, 0);
+});
+
+test('story (AI) found nothing usable → the normal questions, nothing lost', async () => {
+  const io = scriptedIo('en', SAMPLE_SCRIPT.en);
+  const r = await runInterview(io, { today, aiStory: async () => null });
+  assert.equal(r.outcome, 'ready');
+  assert.equal(io.rejected, 0);
 });

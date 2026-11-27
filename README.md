@@ -2,7 +2,7 @@
 
 **Speak your legal problem, get a lawyer-verified document.**
 
-A tenant whose landlord or PG owner has not returned the security deposit speaks their problem in **Hindi, Marathi or English** (or a mix, like Hinglish). Arzi asks the follow-up questions by voice, drafts a formal English legal notice, and sends it to an advocate to check. Once the advocate approves, Arzi reads the notice back point by point in the person's own language and records their spoken consent. The person never has to type.
+A tenant whose landlord or PG owner has not returned the security deposit speaks their problem in **Hindi, Marathi, English or Telugu** (or a mix, like Hinglish). Arzi asks the follow-up questions by voice, drafts a formal English legal notice, and sends it to an advocate to check. Once the advocate approves, Arzi reads the notice back point by point in the person's own language and records their spoken consent. The person never has to type.
 
 > Prototype for Scaler x Wispr Flow "India Runs on Voice", Round 2. Theme: public infrastructure and civic services. **Prototype, not legal advice.**
 
@@ -36,7 +36,7 @@ On the read-back screen, try:
 - Giving consent, either by saying "yes, I understood and I agree" or with the button.
 - **Download PDF**, **Share on WhatsApp** and **History** (each consent recording can be played back there).
 
-With a microphone, press the big mic and say something like *"Mere landlord ne mera deposit wapas nahi kiya"* or *"My PG owner has not returned my deposit"*.
+With a microphone, press the big mic and tell the whole story in your own words, for example *"I left my PG in September, the owner still has my ₹25,000 deposit and says he will cut money for painting"*. Arzi keeps listening until you pause for about 3 seconds or tap the mic (up to 2 minutes). You can tap the mic while Arzi is talking to answer straight away.
 
 Then open **/advocate** (PIN `1234`). You can edit the notice and **Approve** it, or **Request changes** with a note. If you request changes, the citizen sees your note and a **Fix my details** button, corrects the details by voice, and the fixed notice comes back to you as version 2.
 
@@ -55,7 +55,7 @@ flowchart LR
 
 **The notice:** it is sent by the tenant in their own name. It gives the landlord **15 days** to pay, claims **the deposit only**, and reserves the right to claim interest and legal costs. The line "Reviewed by Advocate [name]" appears only after the advocate approves.
 
-**Questions asked:** your name, your address (the rented place), the landlord's name, the landlord's address ("same as mine" works), the deposit amount, the date you moved out, and how long the deposit has been pending.
+**Details needed:** your name, your address (the rented place), the landlord's name, the landlord's address ("same as mine" works), the deposit amount, the date you moved out, and how long the deposit has been pending. In demo mode Arzi asks for each one. In AI mode Arzi first takes every detail already in the story, reads them back in one summary for a yes, and then asks only for what's missing. Other useful facts from the story (the landlord's excuse, deductions they want to make) go into the notice as their own paragraph, which the advocate checks.
 
 ## When things go wrong
 
@@ -83,14 +83,14 @@ Everything works in **Demo mode** with no keys. Two optional keys in `.env` add 
 
 With a Sarvam key:
 
-| | Demo mode (default) | AI mode (Sarvam key set **and** the citizen agrees) |
+| | Demo mode (default) | AI mode (Sarvam key set **and** the consent box ticked) |
 |---|---|---|
 | Speech to text | Browser Web Speech API | Sarvam `saaras:v4`: the answer is recorded and uploaded; better with code-mixed speech and noise. Backup: Groq `whisper-large-v3`, then the browser |
 | Voice | Browser speech synthesis | Sarvam `bulbul:v3`, used only when the browser has no voice for the language (often the case for Telugu) |
-| Understanding answers | Built-in parsers and keywords | The same, plus `sarvam-105b-conversations` for answers the parsers can't read. The AI only *suggests* a value; Arzi still reads it back and the citizen confirms it. |
-| Notice | Legal template | The same template. Names and addresses spoken in Devanagari or Telugu script are transliterated into English letters for the English notice; the summary keeps the original script. |
+| Understanding answers | Built-in parsers and keywords, one question at a time | `sarvam-105b-conversations` reads the whole story for any of the 7 details plus extra facts, then fills gaps in single answers the parsers can't read. The AI only *suggests* values; Arzi reads them back and the citizen confirms them. |
+| Notice | Legal template | The same template, plus a numbered "I further state that…" paragraph with the extra facts from the story, and a matching point in the summary. Names and addresses spoken in Devanagari or Telugu script are transliterated into English letters for the English notice; the summary keeps the original script. |
 
-- **Consent first:** with any key set, Arzi asks once per session, before anything is sent, whether it may send the citizen's voice and words to the outside AI services by name (for example "Sarvam AI, Groq"). Saying no keeps the whole session on browser speech.
+- **Consent first:** with any key set, the home screen shows a checkbox: *"I agree my voice and details are processed by Sarvam AI and Groq to create my document."* It's unticked by default and remembered on the device once ticked. Unticked, nothing is sent to an AI service: speech stays in the browser and drafting stays in demo mode. The spoken "I understood and I agree" at the end of the read-back is still recorded.
 - **Never stuck:** when every service has failed, the session goes back to browser speech. The footer line shows the order (for example "Sarvam → Groq → browser") and which one is in use, including "Groq (backup; Sarvam unavailable)".
 - With only a Groq key, Groq does speech-to-text while the voice and drafting stay in demo mode.
 - **Keys stay on the server.** The browser only learns *which* services are on, never the key. Paid calls are capped per anonymous user and per IP per day (`PAID_CALLS_PER_USER_PER_DAY`, `PAID_CALLS_PER_IP_PER_DAY`), so a public link can't use up all the credits.
@@ -102,9 +102,15 @@ All settings are optional and listed in [`.env.example`](.env.example).
 
 | Language | Status |
 |---|---|
-| Hindi, Marathi, English | Fully supported without keys: questions, number and date words, yes/no, summaries, PDF fonts |
-| Telugu | Built, but waiting for review by our Telugu-speaking teammate. It is hidden from the picker until a device opens [`/?telugu=1`](https://arzi-2p1d.onrender.com/?telugu=1). The review sheet is [`docs/telugu-review.md`](docs/telugu-review.md). |
+| Hindi, Marathi, English, Telugu | Fully supported without keys: questions, number and date words, yes/no, summaries, PDF fonts. Telugu was checked by our Telugu-speaking teammate ([review sheet](docs/telugu-review.md)). |
 | Other Indian languages ("Beta") | Planned; they need a Sarvam key |
+
+## Speed
+
+- **Mic:** reacts within a few milliseconds of a tap (measured at 4 ms in Chrome). Tapping while Arzi talks stops the voice and starts listening, so nobody has to wait for a long question to end. The first tap also asks for microphone permission straight away, while Arzi is still greeting.
+- **Live words with Sarvam:** while the answer is recorded for Sarvam, the browser's own recognition shows the words on screen as you speak, and Sarvam's text replaces them when it arrives. This is turned off on Android, where two users of the microphone can spoil the recording; there you see a "…" until Sarvam answers. Long stories are sent in 25-second pieces while you're still talking.
+- **Page load:** screens load only when opened, there are fewer font files (two weights), responses are compressed, and built files are cached for a year (`index.html` is always rechecked). Locally this took time-to-interactive from 5.4 s to 3.0 s and page weight from 738 KB to 294 KB (Lighthouse, mobile).
+- **Free hosting sleeps:** a Render free service that has slept takes 20–30 s for the first visit. Keep an uptime ping on `/api/health` every 5–10 minutes.
 
 ## Browser notes
 
@@ -131,7 +137,7 @@ You need Node.js 22 or newer.
 npm install
 npm run build        # build the React app into client/dist
 npm start            # API + app on http://localhost:3000
-npm test             # 111 tests: parsers, interview, API, advocate, PDF, Sarvam + Groq (fake servers)
+npm test             # 116 tests: parsers, interview + story, API, advocate, PDF, Sarvam + Groq (fake servers)
 ```
 
 For live reload, run `npm run dev:server` and `npm run dev:client` in two terminals, then open http://localhost:5173.

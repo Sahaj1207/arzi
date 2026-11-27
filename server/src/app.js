@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
+import compression from 'compression';
 import { publicConfig, REPO_ROOT } from './config.js';
 import { db } from './db.js';
 import { pdfRouter } from './routes/pdf.js';
@@ -16,6 +17,8 @@ export function createApp() {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', true); // correct client IPs behind Render's proxy (used by usage limits)
+  // gzip text responses (HTML, JS, CSS, JSON). Audio and PDFs are skipped as already compressed.
+  app.use(compression({ filter: (req, res) => !/^(audio|application\/pdf)/.test(String(res.getHeader('Content-Type') ?? '')) && compression.filter(req, res) }));
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', (_req, res) => {
@@ -42,8 +45,17 @@ export function createApp() {
   // Serve the built frontend (client/dist). In development Vite serves it instead.
   const clientDist = path.join(REPO_ROOT, 'client', 'dist');
   if (fs.existsSync(clientDist)) {
-    app.use(express.static(clientDist));
-    app.get('/{*path}', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+    // Built files in /assets have a content hash in their name, so they never change:
+    // cache them for a year. index.html is always re-checked so a deploy shows at once.
+    app.use(
+      express.static(clientDist, {
+        setHeaders(res, file) {
+          const immutable = file.includes(`${path.sep}assets${path.sep}`);
+          res.setHeader('Cache-Control', immutable ? 'public, max-age=31536000, immutable' : 'no-cache');
+        },
+      }),
+    );
+    app.get('/{*path}', (_req, res) => res.set('Cache-Control', 'no-cache').sendFile(path.join(clientDist, 'index.html')));
   } else {
     app.get('/', (_req, res) =>
       res.type('text').send('Arzi API is running. Frontend not built: run `npm run build` or use the Vite dev server.'),

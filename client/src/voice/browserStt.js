@@ -7,7 +7,11 @@
 //   provider.isSupported()        can it run in this browser?
 //   provider.listen(options)      → Promise<ListenResult>
 //
-//   options:  { lang: 'hi', onInterim(text), signal: AbortSignal, silenceMs: 8000 }
+//   options:  { lang: 'hi', onInterim(text), signal: AbortSignal, silenceMs: 8000,
+//               long: false, endPauseMs: 3000, maxMs, finishSignal: AbortSignal }
+//     long          keep listening across pauses until a pause of endPauseMs (the
+//                   "describe your problem" step), up to maxMs
+//     finishSignal  the person tapped "done": stop now and keep what was heard
 //   ListenResult.status:
 //     'ok'           text heard (result.text)
 //     'silence'      nobody spoke for silenceMs
@@ -33,13 +37,25 @@ export function createBrowserStt() {
   };
 }
 
-function listen({ lang, onInterim = () => {}, signal, silenceMs = 8000, maxMs = 45000 } = {}) {
+function listen({
+  lang,
+  onInterim = () => {},
+  signal,
+  finishSignal,
+  silenceMs = 8000,
+  long = false,
+  endPauseMs = 3000,
+  maxMs = long ? 120000 : 45000,
+} = {}) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return Promise.resolve({ status: 'unsupported', text: '' });
 
   return new Promise((resolve) => {
     const started = Date.now();
     let finalText = '';
+    let interimText = '';
+    let lastHeardAt = 0;
+    let pauseTimer = null;
     let lastConfidence = 0;
     let heardAnything = false;
     let done = false;
@@ -52,7 +68,11 @@ function listen({ lang, onInterim = () => {}, signal, silenceMs = 8000, maxMs = 
       done = true;
       clearTimeout(silenceTimer);
       clearTimeout(maxTimer);
+      clearInterval(pauseTimer);
       signal?.removeEventListener('abort', onAbort);
+      finishSignal?.removeEventListener('abort', onFinish);
+      // Stopped early (tap, long pause, time limit): words not yet final still count.
+      if (status === 'ok' && interimText) finalText += ` ${interimText}`;
       try {
         rec?.abort();
       } catch {
@@ -71,7 +91,13 @@ function listen({ lang, onInterim = () => {}, signal, silenceMs = 8000, maxMs = 
     maxTimer = setTimeout(() => finish('ok'), maxMs);
     const onAbort = () => finish('aborted');
     signal?.addEventListener('abort', onAbort);
+    // "Done" tap: keep what was heard (or count it as silence if nothing was).
+    const onFinish = () => finish(heardAnything ? 'ok' : 'silence');
+    finishSignal?.addEventListener('abort', onFinish);
     if (signal?.aborted) return finish('aborted');
+    if (finishSignal?.aborted) return finish('silence');
+    // Long answers end after a real pause, not Chrome's own short one.
+    if (long) pauseTimer = setInterval(() => heardAnything && Date.now() - lastHeardAt > endPauseMs && finish('ok'), 200);
 
     const start = () => {
       rec = new SR();
@@ -91,8 +117,12 @@ function listen({ lang, onInterim = () => {}, signal, silenceMs = 8000, maxMs = 
             interim += r[0].transcript;
           }
         }
-        if ((finalText + interim).trim()) heardAnything = true;
-        onInterim((finalText + interim).trim());
+        interimText = interim.trim();
+        if ((finalText + interim).trim()) {
+          heardAnything = true;
+          lastHeardAt = Date.now();
+        }
+        onInterim(`${finalText} ${interim}`.replace(/\s+/g, ' ').trim());
       };
 
       rec.onerror = (event) => {
@@ -121,6 +151,15 @@ function listen({ lang, onInterim = () => {}, signal, silenceMs = 8000, maxMs = 
 
       rec.onend = () => {
         if (done) return;
+        interimText = '';
+        // Long answer: Chrome ended at a short pause; keep listening (the pause timer decides).
+        if (long && Date.now() - started < maxMs) {
+          try {
+            return start();
+          } catch {
+            return finish(finalText.trim() ? 'ok' : 'error');
+          }
+        }
         if (finalText.trim()) return finish('ok');
         if (heardAnything) return finish('unclear'); // sounds, but no usable words
         // Chrome gave up early ("no-speech" after ~5 s): keep listening until our 8 s clock.

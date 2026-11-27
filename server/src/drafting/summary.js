@@ -28,7 +28,7 @@ const TEMPLATES = {
     `नोटीस मिळाल्यापासून घरमालकाकडे पैसे परत करण्यासाठी ${DAYS_TO_PAY} दिवस आहेत.`,
     `${DAYS_TO_PAY} दिवसांत पैसे परत न केल्यास, तुम्ही पैसे परत मिळवण्यासाठी केस दाखल करू शकता. ही नोटीस अंतिम होण्यापूर्वी एक वकील ती तपासतात.`,
   ],
-  // Telugu: DRAFT, awaiting native-speaker review (docs/telugu-review.md).
+  // Telugu: checked by a Telugu speaker (docs/telugu-review.md).
   te: (f) => [
     `ఇది మీ నుండి, ${f.tenant} నుండి, మీ ఇంటి యజమాని ${f.landlord}కు, ${f.landlordAddress} చిరునామాకు పంపే లీగల్ నోటీసు.`,
     `మీరు ${f.premises} కోసం ${f.amount} సెక్యూరిటీ డిపాజిట్ కట్టారని, ${f.movedOut}న ఇల్లు ఖాళీ చేశారని, ఆ డిపాజిట్ ఇంకా తిరిగి రాలేదని ఇందులో ఉంది.`,
@@ -38,7 +38,17 @@ const TEMPLATES = {
   ],
 };
 
-export function buildSummary(fields, lang) {
+// Extra facts from the citizen's story (AI mode) get their own point, right after
+// the facts of the deposit, in the citizen's words and language.
+const FACTS_POINT = {
+  en: (x) => `It also says what you told us: ${x}.`,
+  hi: (x) => `इसमें आपकी बताई ये बातें भी लिखी हैं: ${x}।`,
+  mr: (x) => `यात तुम्ही सांगितलेल्या या गोष्टीही लिहिल्या आहेत: ${x}.`,
+  te: (x) => `మీరు చెప్పిన ఈ విషయాలు కూడా ఇందులో ఉన్నాయి: ${x}.`,
+};
+
+// facts: [{ en, local }] (optional)
+export function buildSummary(fields, lang, facts = []) {
   const l = TEMPLATES[lang] ? lang : 'en';
   const f = {
     tenant: fields.tenantName.text,
@@ -48,5 +58,10 @@ export function buildSummary(fields, lang) {
     amount: formatINR(fields.depositAmount.amount),
     movedOut: show('movedOutDate', fields, l),
   };
-  return TEMPLATES[l](f).join('\n');
+  const points = TEMPLATES[l](f);
+  if (facts.length) {
+    const said = facts.map((x) => (l === 'en' ? x.en : x.local).replace(/[.।\s]+$/u, '')).join('; ');
+    points.splice(2, 0, FACTS_POINT[l](said));
+  }
+  return points.join('\n');
 }

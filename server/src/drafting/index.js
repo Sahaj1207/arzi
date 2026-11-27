@@ -37,7 +37,8 @@ async function latinFields(fields, lang, ai) {
 }
 
 // ai: { userId, ip } when AI may be used for this document, otherwise null.
-export async function draftDocument({ fields, lang, today = new Date(), ai = null }) {
+// facts: extra facts from the story (AI mode), [{ en, local }]; [] in demo mode.
+export async function draftDocument({ fields, lang, today = new Date(), ai = null, facts = [] }) {
   let noticeFields = fields;
   let mode = 'demo';
   if (ai && sarvamConfigured()) {
@@ -52,8 +53,8 @@ export async function draftDocument({ fields, lang, today = new Date(), ai = nul
     }
   }
   return {
-    notice: buildNotice(noticeFields, { today }),
-    summary: buildSummary(fields, lang),
+    notice: buildNotice(noticeFields, { today, facts }),
+    summary: buildSummary(fields, lang, facts),
     mode,
   };
 }

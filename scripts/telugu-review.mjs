@@ -19,7 +19,7 @@ w('Generated from the code by `npm run review:telugu`. Please do not edit the Te
 w();
 w('**What to check in every line:** Is it natural, polite everyday Telugu (the way a tenant or student in Hyderabad would speak)? Is the meaning the same as the English? Are there words a person with little schooling would not understand? `{value}`, `{n}`, `{date}` and similar are filled in by the app — keep them.');
 w();
-w('**Try it live:** open <https://arzi-2p1d.onrender.com/?telugu=1> once in Chrome on your Android phone. This turns Telugu on for that phone only (it is hidden from everyone else until you approve it). `?telugu=0` hides it again.');
+w('**Try it live:** open <https://arzi-2p1d.onrender.com/> in Chrome on your Android phone and choose **తెలుగు**. Telugu is available to everyone.');
 w();
 
 w('## 1. Screen and spoken text');
@@ -84,7 +84,7 @@ w();
 
 w('## 6. What to test on the phone');
 w();
-w(`1. Open <https://arzi-2p1d.onrender.com/?telugu=1> in **Chrome on Android**. Choose **తెలుగు**.
+w(`1. Open <https://arzi-2p1d.onrender.com/> in **Chrome on Android**. Choose **తెలుగు**.
 2. **Voice output:** tap the mic. Do you *hear* Arzi in Telugu? Many phones have no Telugu voice: then the text is shown highlighted instead. Note which phone/Android version and what happened. (Phone settings → Text-to-speech → Google → install Telugu voice data improves this.)
 3. **Full interview by voice:** say a real deposit problem in your own words, then answer all 7 questions. For each answer note: what you said, what Arzi heard (shown on screen), and whether it understood first time. Try names, a Hyderabad address, an amount in words ("ఇరవై ఐదు వేలు"), a date ("సెప్టెంబర్ 15"), and "రెండు నెలలుగా".
 4. **Read-back:** is every number and date read correctly, digit by digit?

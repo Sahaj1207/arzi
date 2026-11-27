@@ -27,6 +27,7 @@ const HARD_FAILURES = { denied: 'micDenied', network: 'speechNetwork', unsupport
  * @param {Function} [o.onState]          UI updates: { phase, text?, interim?, messageKey? }
  * @param {AbortSignal} [o.signal]
  * @param {boolean} [o.skipFirstPrompt]   true when the prompt was already spoken
+ * @param {object} [o.listenOptions]      passed to provider.listen (e.g. { long: true })
  * @returns {Promise<{status:'answer',text,value}|{status:'keyboard',reason}|{status:'paused'}|{status:'aborted'}>}
  */
 export async function ask({
@@ -39,6 +40,7 @@ export async function ask({
   signal,
   skipFirstPrompt = false,
   silenceMs = 8000,
+  listenOptions = {},
 }) {
   let failures = 0;
   let silences = 0;
@@ -62,6 +64,7 @@ export async function ask({
 
     onState({ phase: 'listening', interim: '' });
     const heard = await provider.listen({
+      ...listenOptions,
       lang,
       signal,
       silenceMs,

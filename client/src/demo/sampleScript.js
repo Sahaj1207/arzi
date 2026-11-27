@@ -39,7 +39,7 @@ export const SAMPLE_SCRIPT = {
     '30 सप्टेंबर 2026', 'हो',
     'हो, सगळे बरोबर आहे',
   ],
-  // Telugu: draft, awaiting review. Same story as server SAMPLE.te (Hyderabad).
+  // Telugu (reviewed). Same story as server SAMPLE.te (Hyderabad).
   te: [
     'నేను రెండు నెలల క్రితం పీజీ ఖాళీ చేశాను కానీ యజమాని నా సెక్యూరిటీ డిపాజిట్ తిరిగి ఇవ్వలేదు',
     'అవును',

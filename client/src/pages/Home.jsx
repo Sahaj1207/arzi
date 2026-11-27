@@ -16,8 +16,8 @@ import { useInterview } from '../conversation/useInterview.js';
 import { runInterview } from '../conversation/interview.js';
 import { createScriptedProvider } from '../demo/scriptedProvider.js';
 import { SAMPLE_SCRIPT } from '../demo/sampleScript.js';
-import { getAiConsent, setAiConsent, isLanguageVisible } from '../lib/prefs.js';
-import { aiExtract, aiIntent } from '../lib/ai.js';
+import { getAiConsent, setAiConsent } from '../lib/prefs.js';
+import { aiExtract, aiIntent, aiStory } from '../lib/ai.js';
 import { hasSpeechRecognition, isSecureForMic } from '../voice/support.js';
 
 // Sample case pacing: Arzi's lines are shown (not spoken) just long enough to
@@ -38,26 +38,24 @@ function Accented({ text, accent }) {
   );
 }
 
+// "Sarvam AI and Groq", "A, B and C"
+const joinNames = (names, and) => (names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} ${and} ${names.at(-1)}`);
+
 export default function Home({ lang, setLang, config }) {
-  const { view, start, respond, reset } = useInterview({ lang, setLang });
+  const { view, start, respond, reset, interrupt, finishListening } = useInterview({ lang, setLang });
+  const aiNames = config?.aiProviders ?? [];
+  const [aiOk, setAiOk] = useState(() => getAiConsent() === 'yes');
   const started = view.running || view.outcome;
   const navigate = useNavigate();
   const [save, setSave] = useState(null); // null | 'saving' | 'failed'
   const [sample, setSample] = useState(false); // running "Try a sample case"
   const [skip, setSkip] = useState(null); // null | 'busy' | 'failed'
 
-  // Real interview. If an outside AI service is configured, ask for consent once per session.
+  // Real interview. The AI helpers check the consent box themselves: unticked,
+  // they do nothing and the session stays on browser speech and demo drafting.
   const startInterview = () => {
     setSample(false);
-    const aiAvailable = (config?.aiProviders?.length ?? 0) > 0;
-    const askAiConsent = aiAvailable && getAiConsent() === null;
-    start((io) =>
-      runInterview(
-        { ...io, onAiConsent: setAiConsent },
-        // The AI helpers check consent themselves, so they do nothing until the citizen says yes.
-        { askAiConsent, aiProviders: config?.aiProviders?.join(', '), aiExtract, aiIntent },
-      ),
-    );
+    start((io) => runInterview(io, { aiExtract, aiIntent, aiStory }));
   };
 
   // "Try a sample case": the real interview, answered by a script (no mic, no keys).
@@ -93,12 +91,12 @@ export default function Home({ lang, setLang, config }) {
     const base = { userId: getUserId(), lang: o.lang, problem: o.problem, transcript: o.transcript };
     if (o.outcome === 'other' && !o.noted) return;
     setSave('saving');
-    const consent = getAiConsent();
+    const consent = aiNames.length ? getAiConsent() : null;
     const r =
       o.outcome === 'ready'
         ? await api('/documents', {
             method: 'POST',
-            body: { ...base, fields: o.fields, sample, aiConsent: consent === null ? null : consent === 'yes' },
+            body: { ...base, fields: o.fields, facts: o.facts ?? [], sample, aiConsent: consent === null ? null : consent === 'yes' },
           })
         : await api('/notes', { method: 'POST', body: base });
     if (!r.ok) return setSave('failed');
@@ -129,12 +127,12 @@ export default function Home({ lang, setLang, config }) {
             )}
             {/* Language names stay in their own script, even under browser page-translation. */}
             <div
-              className={`lang-switch count-${LANGUAGES.filter(isLanguageVisible).length}`}
+              className={`lang-switch count-${LANGUAGES.length}`}
               role="radiogroup"
               aria-label={t(lang, 'chooseLanguage')}
               translate="no"
             >
-              {LANGUAGES.filter(isLanguageVisible).map((l) => (
+              {LANGUAGES.map((l) => (
                 <button
                   key={l.code}
                   type="button"
@@ -158,6 +156,22 @@ export default function Home({ lang, setLang, config }) {
               <p className="warning" role="alert">
                 {t(lang, 'unsupportedBrowser')}
               </p>
+            )}
+            {aiNames.length > 0 && (
+              <label className="consent-check">
+                <input
+                  type="checkbox"
+                  checked={aiOk}
+                  onChange={(e) => {
+                    setAiOk(e.target.checked);
+                    setAiConsent(e.target.checked);
+                  }}
+                />
+                <span>
+                  {t(lang, 'aiConsentCheck', { providers: joinNames(aiNames, t(lang, 'and')) })}
+                  <small>{t(lang, 'aiConsentHelp')}</small>
+                </span>
+              </label>
             )}
           </div>
         </section>
@@ -196,7 +210,14 @@ export default function Home({ lang, setLang, config }) {
         </div>
       )}
 
-      <InterviewView lang={lang} view={view} respond={respond} sample={sample} />
+      <InterviewView
+        lang={lang}
+        view={view}
+        respond={respond}
+        interrupt={interrupt}
+        finishListening={finishListening}
+        sample={sample}
+      />
 
       {view.outcome?.outcome === 'ready' && <h2 className="outcome-title">{t(lang, 'readyTitle')}</h2>}
       {save === 'saving' && (

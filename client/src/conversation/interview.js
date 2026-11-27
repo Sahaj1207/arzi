@@ -1,7 +1,11 @@
 // The citizen interview (core flow steps 2–3), as one readable async script.
 //
-//   1. Listen to the problem → deposit? → "Is that right? Say yes or no."
+//   1. Listen to the whole problem (until a ~3 s pause or the "done" tap, up to
+//      2 minutes) → deposit? → "Is that right? Say yes or no."
 //      Not a deposit problem → say so, offer to note it for an advocate.
+//   1b. AI mode only (opts.aiStory): read every detail already in the story, plus
+//      extra facts (the landlord's excuse, deductions…), confirm them in ONE summary,
+//      and ask only for what is missing. Demo mode asks every field.
 //   2. Ask the 7 fields one by one. Every answer is read back ("I heard: …
 //      Is that right?"); after 2 "no"s for one field, ask the user to type it.
 //   3. Read a summary → "Is everything correct?" → fix any single field by
@@ -28,6 +32,7 @@ import {
   parseFieldAnswer,
   displayFieldValue,
   speakFieldValue,
+  isValidFieldValue,
 } from '@arzi/shared';
 
 class Stop extends Error {
@@ -40,26 +45,19 @@ class Stop extends Error {
 const MAX_DESCRIBE_TRIES = 2;
 const REJECTIONS_BEFORE_TYPING = 2;
 
-// opts.askAiConsent: only when an outside AI service (Sarvam / Anthropic) is
-// configured and the citizen has not answered yet this session. Asked BEFORE
-// anything they say could be sent to that service; "no" keeps the session on
-// browser speech and demo drafting. The answer is returned as result.aiConsent.
+// Consent for outside AI services is a checkbox on the home screen (not asked here);
+// the AI helpers are only passed in when it is ticked.
 export async function runInterview(io, opts = {}) {
   const s = createSession(io, opts);
   return s.guard(async () => {
-    if (opts.askAiConsent) {
-      const { value } = await s.q(
-        (lang) => t(lang, 'aiConsentAsk', { providers: opts.aiProviders ?? 'an AI service' }),
-        parseYesNo,
-      );
-      s.ctx.aiConsent = value === 'yes';
-      io.onAiConsent?.(s.ctx.aiConsent);
-      await s.io.say(t(s.L(), s.ctx.aiConsent ? 'aiConsentYes' : 'aiConsentNo'));
-    }
     await s.askProblem();
     if (s.ctx.outcome) return s.ctx.outcome; // not a deposit problem
-    for (const field of FIELDS) await s.askField(field);
-    await s.confirmAll();
+    const fromStory = await s.fromStory();
+    const missing = FIELDS.filter((f) => !s.ctx.fields[f.id]);
+    if (fromStory && missing.length) await s.io.say(t(s.L(), 'storyRest'));
+    for (const field of missing) await s.askField(field);
+    // Everything came from the story → its summary was the full check already.
+    if (!fromStory || missing.length) await s.confirmAll();
     s.io.update({ current: 'done' });
     await s.io.say(t(s.L(), 'allSet'));
     return s.result('ready');
@@ -81,16 +79,17 @@ export async function runCorrection(io, { fields, note = '', ...opts }) {
   });
 }
 
-// aiExtract(field, text, lang) / aiIntent(text, lang): optional AI helpers, only
-// passed in when the citizen agreed to AI. They may return null.
-function createSession(io, { today = new Date(), aiExtract = null, aiIntent = null } = {}) {
-  const ctx = { problem: '', fields: {}, transcript: [], outcome: null, aiConsent: null };
+// aiExtract(field, text, lang) / aiIntent(text, lang) / aiStory(text, lang): optional
+// AI helpers, only passed in when the citizen agreed to AI. They may return null.
+//   aiStory → { fields: { <fieldId>: value }, facts: [{ en, local }] }
+function createSession(io, { today = new Date(), aiExtract = null, aiIntent = null, aiStory = null } = {}) {
+  const ctx = { problem: '', fields: {}, facts: [], transcript: [], outcome: null };
   const L = () => io.getLang();
   const result = (outcome, extra = {}) => ({
     outcome,
     lang: L(),
-    aiConsent: ctx.aiConsent,
     problem: ctx.problem,
+    facts: [...ctx.facts],
     fields: { ...ctx.fields },
     transcript: [...ctx.transcript],
     ...extra,
@@ -98,12 +97,13 @@ function createSession(io, { today = new Date(), aiExtract = null, aiIntent = nu
 
   // Ask one question. Every answer is first checked for an emergency and for
   // a language switch, then given to `parse` (null = not understood).
-  async function q(promptFor, parse, { keyboard = false } = {}) {
+  async function q(promptFor, parse, { keyboard = false, long = false } = {}) {
     for (;;) {
       const prompt = promptFor(L());
       const r = await io.ask({
         prompt,
         keyboard,
+        long,
         parse: async (text) => {
           if (isEmergency(text)) return { emergency: true };
           const lang = detectLanguageSwitch(text);
@@ -178,6 +178,7 @@ function createSession(io, { today = new Date(), aiExtract = null, aiIntent = nu
       const { text } = await q(
         (lang) => t(lang, tries === 0 ? 'greeting' : 'describeAgain'),
         (s) => (s.trim() ? s.trim() : null),
+        { long: true }, // the whole story: until a ~3 s pause or the "done" tap
       );
       ctx.problem = ctx.problem ? `${ctx.problem} ${text}` : text;
       io.update({ problem: ctx.problem });
@@ -204,6 +205,41 @@ function createSession(io, { today = new Date(), aiExtract = null, aiIntent = nu
     }
   }
 
+  // ---- 1b. AI mode: details and extra facts already in the story ----
+  // Returns true when at least one field was found (and confirmed).
+  async function fromStory() {
+    if (!aiStory || !ctx.problem) return false;
+    io.update({ current: 'story', phase: 'thinking' });
+    const story = await aiStory(ctx.problem, L());
+    const found = FIELDS.filter((f) => story?.fields?.[f.id] && isValidFieldValue(f, story.fields[f.id]));
+    ctx.facts = (story?.facts ?? []).filter((x) => x?.en && x?.local).slice(0, 4);
+    if (!found.length) return false;
+    for (const f of found) ctx.fields[f.id] = story.fields[f.id];
+    io.update({ fields: { ...ctx.fields } });
+
+    for (;;) {
+      io.update({ current: 'story' });
+      const lines = FIELDS.filter((f) => ctx.fields[f.id]).map((f) => `${f.label[L()]}: ${displayFieldValue(f, ctx.fields[f.id], L())}`);
+      const facts = ctx.facts.length ? ` ${t(L(), 'storyFacts', { facts: ctx.facts.map((x) => x.local.replace(/[.।\s]+$/u, '')).join('; ') })}.` : '';
+      await io.say(`${t(L(), 'storyNoted')} ${lines.join('. ')}.${facts}`);
+      const { value: answer } = await q((lang) => t(lang, 'storyAsk'), summaryAnswer);
+      if (answer.done) return true;
+      const fieldId = answer.field ?? (await q((lang) => t(lang, 'whichField'), detectFieldToChange)).value;
+      await askField(getField(fieldId));
+    }
+  }
+
+  // "Yes" → done; "change the amount" → that field; plain "no" → ask which one.
+  function summaryAnswer(s) {
+    const yn = parseYesNo(s);
+    const field = detectFieldToChange(s);
+    if (yn === 'yes' && !field) return { done: true };
+    if (field) return { field };
+    if (yn === 'yes') return { done: true };
+    if (yn === 'no') return { field: null };
+    return null;
+  }
+
   // ---- 3. Summary and corrections, until the user says everything is correct ----
   async function confirmAll() {
     for (;;) {
@@ -211,18 +247,7 @@ function createSession(io, { today = new Date(), aiExtract = null, aiIntent = nu
       const lines = FIELDS.map((f) => `${f.label[L()]}: ${displayFieldValue(f, ctx.fields[f.id], L())}`);
       await io.say(`${t(L(), 'summaryIntro')} ${lines.join('. ')}.`);
 
-      const { value: answer } = await q(
-        (lang) => t(lang, 'summaryAsk'),
-        (s) => {
-          const yn = parseYesNo(s);
-          const field = detectFieldToChange(s);
-          if (yn === 'yes' && !field) return { done: true };
-          if (field) return { field };
-          if (yn === 'yes') return { done: true };
-          if (yn === 'no') return { field: null };
-          return null;
-        },
-      );
+      const { value: answer } = await q((lang) => t(lang, 'summaryAsk'), summaryAnswer);
       if (answer.done) break;
 
       const fieldId = answer.field ?? (await q((lang) => t(lang, 'whichField'), detectFieldToChange)).value;
@@ -240,5 +265,5 @@ function createSession(io, { today = new Date(), aiExtract = null, aiIntent = nu
     }
   }
 
-  return { io, ctx, L, q, askField, askProblem, confirmAll, result, guard };
+  return { io, ctx, L, q, askField, askProblem, fromStory, confirmAll, result, guard };
 }

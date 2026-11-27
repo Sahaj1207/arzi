@@ -362,10 +362,6 @@ const DEMO = {
     skipToApproved: 'Skip to an approved document',
     sampleBanner: 'Sample case: the answers are typed in automatically, as if spoken.',
     demoAdvocateChecking: 'The demo advocate is checking this sample case…',
-    aiConsentAsk:
-      'Before we start: to understand you better, Arzi can send your voice and words to outside AI services ({providers}). Is that okay? Say yes or no.',
-    aiConsentYes: 'Thank you.',
-    aiConsentNo: 'Okay. I will not use any outside AI service.',
     pause: 'Pause',
     resume: 'Continue',
     repeatPoint: 'Repeat this point',
@@ -379,10 +375,6 @@ const DEMO = {
     skipToApproved: 'सीधे मंज़ूर दस्तावेज़ पर जाइए',
     sampleBanner: 'नमूना केस: जवाब अपने आप लिखे जा रहे हैं, जैसे बोले गए हों।',
     demoAdvocateChecking: 'डेमो वकील इस नमूना केस को जाँच रहे हैं…',
-    aiConsentAsk:
-      'शुरू करने से पहले: आपको बेहतर समझने के लिए अर्ज़ी आपकी आवाज़ और बातें बाहरी AI सेवाओं ({providers}) को भेज सकती है। क्या यह ठीक है? हाँ या ना बोलिए।',
-    aiConsentYes: 'धन्यवाद।',
-    aiConsentNo: 'ठीक है। मैं किसी बाहरी AI सेवा का उपयोग नहीं करूँगी।',
     pause: 'रोकिए',
     resume: 'आगे सुनिए',
     repeatPoint: 'यह बिंदु फिर से',
@@ -396,10 +388,6 @@ const DEMO = {
     skipToApproved: 'थेट मंजूर कागदपत्रावर जा',
     sampleBanner: 'नमुना केस: उत्तरे आपोआप लिहिली जात आहेत, जणू बोलली गेली आहेत.',
     demoAdvocateChecking: 'डेमो वकील ही नमुना केस तपासत आहेत…',
-    aiConsentAsk:
-      'सुरू करण्यापूर्वी: तुम्हाला अधिक चांगले समजण्यासाठी अर्ज़ी तुमचा आवाज आणि बोलणे बाहेरील AI सेवांना ({providers}) पाठवू शकते. हे चालेल का? हो किंवा नाही म्हणा.',
-    aiConsentYes: 'धन्यवाद.',
-    aiConsentNo: 'ठीक आहे. मी कोणतीही बाहेरील AI सेवा वापरणार नाही.',
     pause: 'थांबा',
     resume: 'पुढे ऐका',
     repeatPoint: 'हा मुद्दा पुन्हा',
@@ -485,7 +473,45 @@ const ACCENT = {
 };
 for (const lang of Object.keys(ACCENT)) Object.assign(STRINGS[lang], ACCENT[lang]);
 
-// Telugu lives in its own file (draft, awaiting native-speaker review).
+// Faster mic, whole-story listening, consent checkbox (2026-11-28).
+const FLOW = {
+  en: {
+    tapToAnswer: 'Tap to answer now',
+    tapWhenDone: 'Listening… tap when you are done',
+    and: 'and',
+    aiConsentCheck: 'I agree my voice and details are processed by {providers} to create my document.',
+    aiConsentHelp: 'If you leave this unticked, Arzi uses your browser’s free speech recognition and simple drafting.',
+    storyNoted: 'From what you told me, I noted:',
+    storyFacts: 'I also noted: {facts}',
+    storyAsk: 'Is that right? Say yes, or say what to change.',
+    storyRest: 'Now a few more questions.',
+  },
+  hi: {
+    tapToAnswer: 'अभी जवाब देने के लिए दबाइए',
+    tapWhenDone: 'सुन रही हूँ… पूरा होने पर दबाइए',
+    and: 'और',
+    aiConsentCheck: 'मैं सहमत हूँ कि मेरा दस्तावेज़ बनाने के लिए मेरी आवाज़ और जानकारी {providers} द्वारा प्रोसेस की जाए।',
+    aiConsentHelp: 'टिक न करने पर अर्ज़ी आपके ब्राउज़र की मुफ़्त आवाज़ पहचान और साधारण ड्राफ़्टिंग इस्तेमाल करेगी।',
+    storyNoted: 'आपने जो बताया, उससे मैंने यह लिखा:',
+    storyFacts: 'यह भी लिखा: {facts}',
+    storyAsk: 'क्या यह सही है? हाँ बोलिए, या बताइए क्या बदलना है।',
+    storyRest: 'अब कुछ और सवाल।',
+  },
+  mr: {
+    tapToAnswer: 'आत्ता उत्तर देण्यासाठी दाबा',
+    tapWhenDone: 'ऐकत आहे… बोलून झाल्यावर दाबा',
+    and: 'आणि',
+    aiConsentCheck: 'माझे कागदपत्र तयार करण्यासाठी माझा आवाज आणि माहिती {providers} द्वारे प्रोसेस केली जावी, याला माझी संमती आहे.',
+    aiConsentHelp: 'टिक न केल्यास अर्ज़ी तुमच्या ब्राउझरची मोफत आवाज ओळख आणि साधे ड्राफ्टिंग वापरेल.',
+    storyNoted: 'तुम्ही जे सांगितले त्यावरून मी हे लिहिले:',
+    storyFacts: 'हेही लिहिले: {facts}',
+    storyAsk: 'हे बरोबर आहे का? हो म्हणा, किंवा काय बदलायचे ते सांगा.',
+    storyRest: 'आता अजून काही प्रश्न.',
+  },
+};
+for (const lang of Object.keys(FLOW)) Object.assign(STRINGS[lang], FLOW[lang]);
+
+// Telugu lives in its own file (checked by a Telugu speaker).
 STRINGS.te = TE;
 
 // t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.

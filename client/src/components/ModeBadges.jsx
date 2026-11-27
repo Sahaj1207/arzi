@@ -14,10 +14,12 @@ export default function ModeBadges({ config }) {
     const bump = () => refresh((n) => n + 1);
     window.addEventListener('arzi:ai-fallback', bump);
     window.addEventListener('arzi:stt-provider', bump);
-    const timer = setInterval(bump, 3000); // consent is given inside the interview
+    window.addEventListener('arzi:ai-consent', bump);
+    const timer = setInterval(bump, 3000);
     return () => {
       window.removeEventListener('arzi:ai-fallback', bump);
       window.removeEventListener('arzi:stt-provider', bump);
+      window.removeEventListener('arzi:ai-consent', bump);
       clearInterval(timer);
     };
   }, []);
@@ -32,16 +34,16 @@ export default function ModeBadges({ config }) {
     const consent = getAiConsent();
     const current = lastSpeechService();
     if (aiServiceFailed('stt')) voice = `browser speech (${names.join(' and ')} unavailable, switched automatically)`;
-    else if (consent === 'no') voice = 'browser speech (AI declined)';
-    else if (consent !== 'yes') voice = `${order}, after you agree`;
+    else if (consent !== 'yes') voice = `browser speech (tick the consent box to use ${names.join(' and ')})`;
     else if (current && current !== chain[0]) voice = `${NAME[current]} (backup; ${names[0]} unavailable), then browser`;
     else voice = order;
   }
-  const mode = config.mode === 'ai' ? 'AI' : chain.length ? 'demo drafting' : 'demo (no AI keys)';
+  const ticked = getAiConsent() === 'yes';
+  const mode = config.mode === 'ai' ? (ticked ? 'AI' : 'demo (consent box not ticked)') : chain.length ? 'demo drafting' : 'demo (no AI keys)';
 
   return (
     <p className="status-line" lang="en">
-      <span className={`status-dot-small ${config.mode === 'ai' ? 'is-ai' : ''}`} aria-hidden="true" />
+      <span className={`status-dot-small ${config.mode === 'ai' && ticked ? 'is-ai' : ''}`} aria-hidden="true" />
       Voice: {voice}. Mode: {mode}.
     </p>
   );

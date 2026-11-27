@@ -11,9 +11,9 @@ import { TE } from '../src/i18n-te.js';
 
 const today = new Date(2026, 10, 27);
 
-test('Telugu is a language, hidden for review', () => {
+test('Telugu is a fully supported language, shown to everyone', () => {
   const te = LANGUAGES.find((l) => l.code === 'te');
-  assert.deepEqual([te.speechTag, te.review], ['te-IN', true]);
+  assert.deepEqual([te.speechTag, te.review], ['te-IN', undefined]);
 });
 
 test('every screen and spoken line has a Telugu version (except English-only footer lines)', () => {
