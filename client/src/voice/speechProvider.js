@@ -36,5 +36,3 @@ export function fallBackToBrowser(reason) {
   markAiFailed('stt', reason);
 }
 
-// Display name for the footer status line.
-export const PROVIDER_LABEL = { browser: 'Browser speech', sarvam: 'Sarvam', wispr: 'Wispr Flow' };

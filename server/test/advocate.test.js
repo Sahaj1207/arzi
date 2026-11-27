@@ -8,6 +8,7 @@ import { FIELDS_OK } from './fixtures.js';
 
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'arzi-adv-'));
 process.env.DATA_DIR = dataDir;
+process.env.ARZI_IGNORE_DOTENV = '1'; // never use a developer's real keys
 delete process.env.ADVOCATE_PIN; // the built-in default must work
 
 let server;

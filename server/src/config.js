@@ -8,10 +8,13 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
 
 // Load .env from the repo root if it exists. Missing file is fine.
-try {
-  process.loadEnvFile(path.join(REPO_ROOT, '.env'));
-} catch {
-  /* no .env: demo mode */
+// Tests set ARZI_IGNORE_DOTENV so a developer's real keys are never used (or billed).
+if (!process.env.ARZI_IGNORE_DOTENV) {
+  try {
+    process.loadEnvFile(path.join(REPO_ROOT, '.env'));
+  } catch {
+    /* no .env: demo mode */
+  }
 }
 
 const env = (name) => {

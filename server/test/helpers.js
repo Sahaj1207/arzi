@@ -9,7 +9,7 @@ import { FIELDS_OK } from './fixtures.js';
 export function setupServer(env = {}) {
   const ctx = { base: null };
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'arzi-t-'));
-  Object.assign(process.env, { DATA_DIR: dataDir, ...env });
+  Object.assign(process.env, { ARZI_IGNORE_DOTENV: '1', DATA_DIR: dataDir, ...env });
   let server;
 
   before(async () => {

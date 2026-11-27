@@ -100,17 +100,17 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - Show a small "Prototype — not legal advice" note in the UI.
 
 ## 7. Definition of done
-- [ ] Fresh clone → `docker compose up` → main screen loads at localhost:3000 with no `.env`.
-- [ ] Citizen completes steps 1–7 entirely by voice in Hindi and in English (Marathi if browser supports it).
-- [ ] Advocate can approve and request changes at `/advocate`.
-- [ ] Consent recording is saved and playable in history; PDF downloads.
-- [ ] All error cases in section 4 behave as described.
-- [ ] With a Sarvam key set, speech uses Sarvam; removing the key or exhausting credits falls back to browser speech without errors.
-- [ ] PDF shows Hindi/Marathi text correctly.
-- [ ] (After step 8) Telugu works end to end by voice, translations checked by the Telugu-speaking teammate; PDF shows Telugu correctly.
-- [ ] (After step 8) With a Sarvam key and no browser Telugu voice, Telugu read-back uses Sarvam text-to-speech.
+- [x] Fresh clone → `docker compose up` → main screen loads at localhost:3000 with no `.env`.
+- [ ] Citizen completes steps 1–7 entirely by voice in Hindi and in English (Marathi if browser supports it). *(Flow verified with the scripted sample and typed answers; still to test with a real phone mic on the live link.)*
+- [x] Advocate can approve and request changes at `/advocate`.
+- [x] Consent recording is saved and playable in history; PDF downloads.
+- [x] All error cases in section 4 behave as described.
+- [x] With a Sarvam key set, speech uses Sarvam; removing the key or exhausting credits falls back to browser speech without errors.
+- [x] PDF shows Hindi/Marathi text correctly.
+- [ ] (After step 8) Telugu works end to end by voice, translations checked by the Telugu-speaking teammate; PDF shows Telugu correctly. *(Built and PDF font bundled; waiting for the teammate's review.)*
+- [x] (After step 8) With a Sarvam key and no browser Telugu voice, Telugu read-back uses Sarvam text-to-speech.
 - [ ] (Optional, lowest priority) With a Sarvam key, Beta languages are selectable and labelled "Beta"; without a key they show greyed out with "Needs Sarvam key".
-- [ ] README complete; commits are frequent and meaningful.
+- [x] README complete; commits are frequent and meaningful.
 
 ## 8. How to work
 - Plan the structure first and show it to me before writing lots of code.
@@ -148,3 +148,4 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - 2026-11-27: Sarvam verified live with the real key (TTS hi/te, STT round trip, LLM extraction + intent, transliteration incl. Telugu) and the consent prompt in the app.
 - 2026-11-27: AI scope decisions: Sarvam TTS only when the browser has no voice for the language (saves credits); the LLM only classifies the problem and proposes values the built-in parser could not read (always read back + confirmed); the legal notice wording stays the template. Names/addresses transliterated for the English notice only. Wispr and Anthropic not wired yet (keys ignored). Paid-call caps raised to 150/user and 500/IP per day.
 - 2026-11-27: Added before deploy: "Try a sample case" (scripted voice interview → demo auto-approve → read-back) + "Skip to an approved document"; consent prompt once per session before any outside AI service; read-back controls (pause/continue, repeat point, slower/faster).
+- 2026-11-27: Step 10 (README + polish): README rewritten for judges (2-minute tour, flow diagram, error-handling table, Demo vs AI mode, language status, key files). Tests set `ARZI_IGNORE_DOTENV` so they never read a developer's real `.env` keys or spend Sarvam credits. Added a favicon; removed unused code.
