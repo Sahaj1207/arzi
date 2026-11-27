@@ -66,3 +66,11 @@ db.exec(`
     PRIMARY KEY (subject, day)
   );
 `);
+
+// Small migrations for databases created by an earlier version of the app.
+const hasColumn = (table, column) => db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === column);
+if (!hasColumn('documents', 'share_token')) {
+  // Random token for the WhatsApp share link (so the private userId is never shared).
+  db.exec('ALTER TABLE documents ADD COLUMN share_token TEXT');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS documents_share_token ON documents(share_token)');
+}

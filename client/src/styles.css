@@ -286,6 +286,24 @@ textarea.editor:not(#note) { font-family: Georgia, 'Times New Roman', var(--font
 .btn.btn-warn { border-color: var(--red); color: var(--red); }
 @media (max-width: 560px) { .decide-buttons { grid-template-columns: 1fr; } }
 
+/* Header navigation */
+.topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.nav-link { font-weight: 700; color: var(--teal); font-size: 17px; text-decoration: underline; min-height: 44px; display: grid; place-items: center; }
+
+/* PDF / WhatsApp */
+.doc-actions { display: grid; gap: 10px; }
+a.btn { display: grid; place-items: center; text-decoration: none; text-align: center; }
+.btn.btn-whatsapp { background: #128c4a; border-color: #128c4a; color: #fff; }
+
+/* History */
+.page-title { font-size: 28px; margin: 0; }
+.history { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.history-item { display: grid; gap: 10px; padding: 16px; border-radius: var(--radius); border: 2px solid var(--line); background: #fff; }
+.history-head { display: flex; justify-content: space-between; gap: 10px; font-size: 20px; flex-wrap: wrap; }
+.history-amount { font-weight: 700; font-variant-numeric: tabular-nums; }
+.versions-log summary, .version-item summary { cursor: pointer; font-weight: 700; min-height: 40px; display: flex; align-items: center; }
+.version-item { margin: 6px 0 0 12px; }
+
 /* Read-back + consent */
 .readback { width: 100%; display: flex; flex-direction: column; gap: 16px; }
 .readback-points { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; font-size: 21px; }

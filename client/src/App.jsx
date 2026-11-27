@@ -8,6 +8,7 @@ import ModeBadges from './components/ModeBadges.jsx';
 import Home from './pages/Home.jsx';
 import DocumentStatus from './pages/DocumentStatus.jsx';
 import Advocate from './pages/Advocate.jsx';
+import History from './pages/History.jsx';
 
 export default function App() {
   const [config, setConfig] = useState(null);
@@ -37,12 +38,20 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true">अ</span>
           <span className="brand-name">Arzi</span>
         </Link>
-        <ModeBadges config={config} />
+        <div className="topbar-right">
+          {!wide && (
+            <Link to="/history" className="nav-link">
+              {t(lang, 'history')}
+            </Link>
+          )}
+          <ModeBadges config={config} />
+        </div>
       </header>
 
       <Routes>
         <Route path="/" element={<Home lang={lang} setLang={setLang} />} />
         <Route path="/documents/:id" element={<DocumentStatus lang={lang} />} />
+        <Route path="/history" element={<History lang={lang} />} />
         <Route path="/advocate" element={<Advocate />} />
         <Route path="/advocate/:id" element={<Advocate />} />
         <Route path="*" element={<Home lang={lang} setLang={setLang} />} />

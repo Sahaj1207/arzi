@@ -308,6 +308,50 @@ const CONSENT = {
 };
 for (const lang of Object.keys(CONSENT)) Object.assign(STRINGS[lang], CONSENT[lang]);
 
+// PDF, history and sharing (step 8).
+const HISTORY = {
+  en: {
+    downloadPdf: 'Download PDF',
+    shareWhatsApp: 'Share on WhatsApp',
+    shareMessage: 'My legal notice for the security deposit, checked by an advocate (made with Arzi): {url}',
+    noDocuments: 'You have no documents on this phone yet.',
+    earlierVersions: 'Earlier versions',
+    author_system: 'First draft',
+    author_citizen: 'Your correction',
+    author_advocate: 'Advocate’s edit',
+    openDocument: 'Open',
+    madeOn: 'Made on {date}',
+    shareFailed: 'Could not create the share link. Please try again.',
+  },
+  hi: {
+    downloadPdf: 'PDF डाउनलोड करें',
+    shareWhatsApp: 'WhatsApp पर भेजें',
+    shareMessage: 'सिक्योरिटी डिपॉज़िट के लिए मेरा लीगल नोटिस, वकील से जाँचा हुआ (अर्ज़ी से बनाया): {url}',
+    noDocuments: 'इस फ़ोन पर अभी कोई दस्तावेज़ नहीं है।',
+    earlierVersions: 'पुराने संस्करण',
+    author_system: 'पहला ड्राफ़्ट',
+    author_citizen: 'आपका सुधार',
+    author_advocate: 'वकील का बदलाव',
+    openDocument: 'खोलें',
+    madeOn: '{date} को बना',
+    shareFailed: 'शेयर लिंक नहीं बन सका। कृपया फिर से कोशिश कीजिए।',
+  },
+  mr: {
+    downloadPdf: 'PDF डाउनलोड करा',
+    shareWhatsApp: 'WhatsApp वर पाठवा',
+    shareMessage: 'अनामत रकमेसाठी माझी कायदेशीर नोटीस, वकिलांनी तपासलेली (अर्ज़ीने तयार केली): {url}',
+    noDocuments: 'या फोनवर अजून कोणतेही कागदपत्र नाही.',
+    earlierVersions: 'जुन्या आवृत्त्या',
+    author_system: 'पहिला मसुदा',
+    author_citizen: 'तुमची दुरुस्ती',
+    author_advocate: 'वकिलांचा बदल',
+    openDocument: 'उघडा',
+    madeOn: '{date} रोजी तयार',
+    shareFailed: 'शेअर लिंक तयार झाली नाही. कृपया पुन्हा प्रयत्न करा.',
+  },
+};
+for (const lang of Object.keys(HISTORY)) Object.assign(STRINGS[lang], HISTORY[lang]);
+
 // t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.
 export function t(lang, key, vars) {
   const s = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;

@@ -153,7 +153,7 @@ documentsRouter.post('/', async (req, res, next) => {
 documentsRouter.get('/', (req, res) => {
   const { userId } = req.query;
   if (!USER_ID.test(userId ?? '')) return bad(res, 'invalid_user');
-  res.json(docsForUser.all(userId).map((row) => serializeDocument(row)));
+  res.json(docsForUser.all(userId).map((row) => serializeDocument(row, { versions: true })));
 });
 
 documentsRouter.get('/:id', (req, res) => {

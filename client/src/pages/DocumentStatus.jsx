@@ -11,6 +11,7 @@ import FieldCards from '../components/FieldCards.jsx';
 import FixDetails from '../components/FixDetails.jsx';
 import ReadBack from '../components/ReadBack.jsx';
 import ConsentRecord from '../components/ConsentRecord.jsx';
+import DocumentActions from '../components/DocumentActions.jsx';
 
 const POLL_MS = 5000;
 const SPOKEN = { pending_review: 'sentSpoken', approved: 'approvedSpoken', changes_requested: 'changesSpoken' };
@@ -101,6 +102,7 @@ export default function DocumentStatus({ lang }) {
       )}
 
       <ConsentRecord doc={doc} />
+      {!reading && <DocumentActions doc={doc} />}
 
       {doc.status === 'changes_requested' && !fixing && (
         <button type="button" className="btn btn-primary btn-big" onClick={() => setFixing(true)}>
@@ -148,6 +150,7 @@ export default function DocumentStatus({ lang }) {
         </section>
       )}
 
+      <Link className="btn btn-big" to="/history">{t(dl, 'history')}</Link>
       <Link className="btn btn-big" to="/">{t(dl, 'newNotice')}</Link>
     </main>
   );

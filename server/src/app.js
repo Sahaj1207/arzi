@@ -7,6 +7,7 @@ import { db } from './db.js';
 import { pdfRouter } from './routes/pdf.js';
 import { documentsRouter, notesRouter } from './routes/documents.js';
 import { advocateRouter } from './routes/advocate.js';
+import { filesRouter, sharedRouter } from './routes/files.js';
 import { findChromium } from './pdf/render.js';
 
 export function createApp() {
@@ -25,6 +26,8 @@ export function createApp() {
   });
 
   app.use('/api/documents', documentsRouter);
+  app.use('/api/documents', filesRouter);
+  app.use('/api/shared', sharedRouter);
   app.use('/api/notes', notesRouter);
   app.use('/api/advocate', advocateRouter);
   app.use('/api/pdf', pdfRouter);
