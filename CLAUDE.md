@@ -47,6 +47,11 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 6. **Read-back + voice consent.** When approved, Arzi reads aloud the **plain-language summary of the approved notice in the user's language**, point by point (who it is sent to, the amount claimed, the deadline given, what happens next). The English legal notice itself is shown on screen; the user can also ask to hear it in English. Then Arzi asks: "Did you understand this document and do you agree? Say: yes, I understood and I agree." Record the user's spoken answer (audio file) and save it with the document.
 7. **History.** User's history page: each document with status, date, final PDF download, the consent recording (playable), and earlier versions. Share to WhatsApp via a share link/intent.
 
+**Demo helpers and comfort controls (added before the Render deploy):**
+- **"Try a sample case"** (home screen): auto-plays the real voice interview with pre-typed sample answers shown word by word on screen (a scripted speech provider; no mic, no keys), then the demo advocate auto-approves it and the read-back + consent screen opens. A **"Skip to an approved document"** link goes straight there. Only sample cases can be auto-approved.
+- **Consent before AI:** when an outside AI service is configured (Sarvam / Anthropic / Wispr keys), Arzi asks once per session, before anything is sent, whether that is okay. "No" keeps the session on browser speech and demo drafting. Never asked without keys, never in the sample case.
+- **Read-back controls:** Pause / Continue, Repeat this point, Slower / Faster (speed remembered on the device).
+
 **Identity (keep it simple):** no login or OTP in the prototype. Give each citizen an anonymous ID stored in the browser (localStorage) so their history persists on that device. The citizen screen shows the document status and updates automatically (simple polling) when the advocate approves or requests changes.
 
 ## 4. When things go wrong (judges will check this — it was promised in our Activity 2 prompt)
@@ -88,6 +93,9 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - **Frontend:** React (Vite), mobile-first, large text, high contrast, big touch targets, works for older users. Every step usable by voice alone; buttons as backup.
 - **Docker:** one `docker-compose.yml`, app on port 3000, volume for the SQLite DB and recordings. The image must build on a clean machine (make sure any native modules, e.g. SQLite drivers, compile inside the image).
 - **Deploy:** after build step 8, deploy to **Render** (Docker, HTTPS) so the voice flow can be tested on real phones; this is also the optional live link (must work until 2 Dec).
+  - **Free tier** (`render.yaml`). No disk, so data is wiped on restart: sample cases (one pending, one approved, one "other problem") are seeded on every startup; the demo advocate is config only (PIN 1234).
+  - Measured in Docker with Render-free limits: Chromium peak ~230 MB real memory (fits 512 MB, closed after 60 s idle), but at **0.1 CPU the first PDF takes ~55 s**. So the live link sets **`PDF_ENGINE=print`** (print-to-PDF page); `docker compose up` keeps real Chromium PDFs.
+  - The user keeps it awake with an uptime ping to `/api/health`.
 - Include `.env.example` (all keys optional, documented) and a clear `README.md`: what Arzi is, how to run (`docker compose up`, open http://localhost:3000 in Chrome), demo mode vs AI mode, browser support notes.
 - Show a small "Prototype — not legal advice" note in the UI.
 
@@ -130,3 +138,5 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - 2026-11-27: Request changes → citizen sees note + "Fix my details", corrects by voice, redraft goes back as the next version. Advocate can also edit the text directly for small fixes.
 - 2026-11-27: Step 9 adds Sarvam transliteration of Devanagari/Telugu names and addresses into English letters for the English notice; summary keeps the original script.
 - 2026-11-27: Demo advocate default name "R. Mehta (demo)" (override `ADVOCATE_NAME`). "Reviewed by Advocate" line shown only once approved.
+- 2026-11-27: Live link on Render **free tier** (not Starter). Sample cases seeded on every startup. Live link uses `PDF_ENGINE=print` because 0.1 CPU makes Chromium PDFs take ~55 s (memory fits). User sets up an uptime ping.
+- 2026-11-27: Added before deploy: "Try a sample case" (scripted voice interview → demo auto-approve → read-back) + "Skip to an approved document"; consent prompt once per session before any outside AI service; read-back controls (pause/continue, repeat point, slower/faster).

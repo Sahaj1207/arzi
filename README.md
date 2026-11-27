@@ -16,6 +16,28 @@ Open **http://localhost:3000** in **Google Chrome** (or Microsoft Edge). No `.en
 
 - Advocate page: **http://localhost:3000/advocate**, demo PIN **`1234`** (change with `ADVOCATE_PIN`).
 - Data (SQLite DB, consent recordings, PDFs) is kept in the `arzi-data` Docker volume.
+- Sample cases are added on every start, so the advocate desk is never empty.
+
+## Quick demo (no microphone needed)
+
+On the home screen:
+
+- **Try a sample case** — the real voice interview runs with pre-typed answers appearing word by word, as if spoken. Arzi asks, reads back and confirms every answer. The demo advocate then approves it, and the read-back and consent screen opens.
+- **Skip to an approved document** — straight to the read-back, consent, PDF and WhatsApp.
+
+During the read-back: **Pause / Continue**, **Repeat this point**, **Slower / Faster** (speed is remembered on the device). Say "English" to hear the full notice in English.
+
+If an AI key is set, Arzi asks once per session before anything is sent to an outside AI service; saying no keeps the session on browser speech and demo drafting.
+
+## Live demo on Render (free tier)
+
+[`render.yaml`](render.yaml) deploys the same Docker image with HTTPS (needed for the microphone on phones). Free tier limits and what Arzi does about them:
+
+| Limit | What Arzi does |
+|---|---|
+| No disk: data is wiped on restart/redeploy | Sample cases are re-created on every start |
+| 0.1 CPU: a Chromium PDF takes ~55 s | `PDF_ENGINE=print`: "Download PDF" opens the print page (Save as PDF) |
+| Sleeps after 15 min idle | Ping `/api/health` every 5–10 min with an uptime monitor |
 
 ## Demo mode vs AI mode
 
@@ -32,7 +54,7 @@ All keys are optional and read only by the backend. See [`.env.example`](.env.ex
 - Voice input needs **Chrome or Edge** (desktop or Android). Other browsers show a message and a keyboard fallback.
 - Chrome's speech recognition sends audio to Google, so it **needs an internet connection**.
 - The microphone only works on **https://** or **localhost**. Opening the app from a phone via your laptop's LAN IP will not get mic access; use the HTTPS live link instead.
-- PDFs are rendered with headless Chromium inside the Docker image. If that fails, the app keeps running and offers the browser's **Print → Save as PDF** instead.
+- PDFs are rendered with headless Chromium inside the Docker image (one at a time; Chromium is closed after 60 s idle to free memory). If that fails, or `PDF_ENGINE=print` is set, the app keeps running and offers the browser's **Print → Save as PDF** instead.
 
 ## Development (without Docker)
 

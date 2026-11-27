@@ -1,0 +1,31 @@
+# Render Blueprint for the Arzi live demo (free tier).
+# Render builds the same Dockerfile that `docker compose up` uses and serves it over HTTPS
+# (HTTPS is what lets phones use the microphone).
+#
+# Free tier facts this is designed around:
+#   - 512 MB RAM and 0.1 CPU: Chromium fits in memory but a PDF takes ~55 s to start,
+#     so PDFs here use the browser's print-to-PDF page (PDF_ENGINE=print).
+#     `docker compose up` on a normal machine still makes real Chromium PDFs.
+#   - No persistent disk: the database and recordings are wiped on every restart or
+#     redeploy. The app re-creates the sample cases on every start (server/src/demo/sample.js).
+#   - Sleeps after 15 minutes without traffic: keep it awake with an uptime ping to
+#     /api/health every 5–10 minutes.
+#
+# All API keys are optional. Add them later in the Render dashboard (Environment tab);
+# never put them in this file.
+services:
+  - type: web
+    name: arzi
+    runtime: docker
+    plan: free
+    region: singapore # closest Render region to India
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true # every push to main redeploys
+    envVars:
+      - key: PDF_ENGINE
+        value: print
+      # Render sets PORT itself; the server reads it. DATA_DIR defaults to /app/data.
+      # ADVOCATE_PIN is not set, so the demo PIN is the documented default 1234.
