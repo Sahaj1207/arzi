@@ -15,12 +15,16 @@ Arzi lets ordinary Indians create a legal document by **speaking**, gets it chec
 Real, frequent (tenants, students in PGs and hostels), one standard format, easy to test with real users.
 
 ## 2. Users
-- **Citizen:** tenants, students, workers. Many have low literacy or are not comfortable typing. Speak Hindi, Marathi, English, or a mix (Hinglish). Strong regional accents. Often on cheap Android phones, in noisy places.
+- **Citizen:** tenants, students, workers. Many have low literacy or are not comfortable typing. Speak Hindi, Marathi, English, Telugu (added after step 8), or a mix (Hinglish). Strong regional accents. Often on cheap Android phones, in noisy places.
+
+### Languages
+- **Fully supported, no keys needed:** Hindi (`hi-IN`), Marathi (`mr-IN`), English (`en-IN`), and **Telugu (`te-IN`)**. Telugu is added **only after step 8 works end to end in Hindi, Marathi and English**. A Telugu-speaking teammate checks the translations and tests by voice. Telugu needs the same pieces as the others: UI and spoken strings, field questions, number words, month names, yes/no and intent keywords, the plain-language summary template, digit-by-digit read-back, and a bundled Noto Sans Telugu font for the PDF.
+- **Beta languages (lowest priority, cut first if time runs short):** only when `SARVAM_API_KEY` is set, offer the other Indian languages Sarvam supports. They use Sarvam speech-to-text (and Sarvam text-to-speech where available) plus the LLM for field extraction and the translated summary, since we have no hand-written parsers or templates for them. They are **clearly labelled "Beta"** in the UI. Without a Sarvam key they are not shown at all.
 - **Advocate:** reviews and approves drafts on a laptop or phone.
 
 ## 3. Core flow (must work end to end, citizen never has to type)
 
-1. **Welcome.** Home screen: one big microphone button + language picker (Hindi, Marathi, English). Arzi speaks first: greets and asks the user to describe their problem.
+1. **Welcome.** Home screen: one big microphone button + language picker (Hindi, Marathi, English; Telugu later; Beta languages only with a Sarvam key, see "Languages"). Arzi speaks first: greets and asks the user to describe their problem.
 2. **Describe the problem.** User speaks freely. Show live transcript. Arzi confirms: "Your landlord has not returned your deposit. I will make a legal notice. Is that right? Say yes or no."
 3. **Follow-up questions by voice, one at a time.** Ask for each field, show each answer as a filled card:
    - your full name
@@ -56,7 +60,7 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 
 ## 6. Technical decisions (designed around the no-keys rule)
 - **Speech-to-text, behind one pluggable "speech provider" interface:**
-  - **Default (no key): browser Web Speech API** (`SpeechRecognition`, lang `hi-IN`, `mr-IN`, `en-IN`). Works in Chrome/Edge on desktop and Android; needs localhost or HTTPS. Detect support and show a clear message on unsupported browsers. Verify Marathi early.
+  - **Default (no key): browser Web Speech API** (`SpeechRecognition`, lang `hi-IN`, `mr-IN`, `en-IN`, later `te-IN`). Works in Chrome/Edge on desktop and Android; needs localhost or HTTPS. Detect support and show a clear message on unsupported browsers. Verify Marathi early.
     - Chrome's Web Speech sends audio to Google, so it **needs internet**.
     - It rarely gives a usable confidence score, so "low confidence" in practice means **no result, an empty result, or a very short result**.
     - A phone opening the app via the laptop's LAN IP gets **no mic access** (needs HTTPS or localhost). Phone testing uses the HTTPS Render deploy (section 6, Deploy).
@@ -88,6 +92,8 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - [ ] All error cases in section 4 behave as described.
 - [ ] With a Sarvam key set, speech uses Sarvam; removing the key or exhausting credits falls back to browser speech without errors.
 - [ ] PDF shows Hindi/Marathi text correctly.
+- [ ] (After step 8) Telugu works end to end by voice, translations checked by the Telugu-speaking teammate; PDF shows Telugu correctly.
+- [ ] (Optional, lowest priority) With a Sarvam key, Beta languages appear labelled "Beta"; without a key they are hidden.
 - [ ] README complete; commits are frequent and meaningful.
 
 ## 8. How to work
@@ -108,3 +114,6 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - 2026-11-27: After step 8, deploy to Render (HTTPS) for phone testing.
 - 2026-11-27: Fresh-clone `docker compose up` test before step 2; after every step re-check that the Docker build starts, report only failures.
 - 2026-11-27: Build order: 1 skeleton+Docker+Chromium, 2 shared parsers/tests, 3 voice layer, 4 conversation machine, 5 documents API + demo drafting, 6 advocate page, 7 read-back + consent, 8 PDF + history, then Render deploy, 9 optional providers, 10 README/polish.
+- 2026-11-27: Telugu (`te-IN`) becomes the 4th fully supported language, added only after step 8 works in hi/mr/en; a Telugu-speaking teammate reviews translations and tests by voice.
+- 2026-11-27: "Beta languages" mode: with a Sarvam key, offer Sarvam's other Indian languages via Sarvam speech + LLM extraction/summaries, labelled "Beta"; hidden without a key. Lowest priority.
+- 2026-11-27: Updated build order after step 8: Render deploy → Telugu → 9 optional providers (Sarvam, Anthropic, Wispr) → 10 README/polish → Beta languages (needs step 9's Sarvam + LLM). Cut order if short on time: Beta languages first, then Wispr, then Sarvam text-to-speech.
