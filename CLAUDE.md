@@ -93,6 +93,7 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 ## 8. How to work
 - Plan the structure first and show it to me before writing lots of code.
 - Build in small working steps; commit after each working step and push to GitHub.
+- After every step, check that `docker compose up` still builds and starts (main screen loads at localhost:3000). Only report it to the user if something breaks.
 - Explain briefly what you built after each step so I understand the codebase (I will be asked about it at the finale).
 - **This file is a living document.** If I give an instruction that conflicts with this file, follow my latest instruction, then update the relevant section of this file and add a dated line to the Decisions log below, so the file always matches what we are actually building. If something here is unclear or seems wrong, ask me before guessing.
 
@@ -105,4 +106,5 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - 2026-11-27: Public GitHub repo created with gh; push after each build step.
 - 2026-11-27: Accepted brief corrections: Web Speech needs internet; "low confidence" = no/empty/very short result; phones need HTTPS for mic; Android consent mic-contention fallback button; Wispr adapter marked untested; usage limit per ID and per IP.
 - 2026-11-27: After step 8, deploy to Render (HTTPS) for phone testing.
+- 2026-11-27: Fresh-clone `docker compose up` test before step 2; after every step re-check that the Docker build starts, report only failures.
 - 2026-11-27: Build order: 1 skeleton+Docker+Chromium, 2 shared parsers/tests, 3 voice layer, 4 conversation machine, 5 documents API + demo drafting, 6 advocate page, 7 read-back + consent, 8 PDF + history, then Render deploy, 9 optional providers, 10 README/polish.
