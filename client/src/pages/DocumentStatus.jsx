@@ -8,6 +8,7 @@ import { api } from '../lib/api.js';
 import { getUserId } from '../lib/userId.js';
 import { speak } from '../voice/tts.js';
 import FieldCards from '../components/FieldCards.jsx';
+import FixDetails from '../components/FixDetails.jsx';
 
 const POLL_MS = 5000;
 const SPOKEN = { pending_review: 'sentSpoken', approved: 'approvedSpoken', changes_requested: 'changesSpoken' };
@@ -16,6 +17,7 @@ export default function DocumentStatus({ lang }) {
   const { id } = useParams();
   const [doc, setDoc] = useState(null);
   const [error, setError] = useState(null); // 'notFound' | 'offline'
+  const [fixing, setFixing] = useState(false);
   const lastStatus = useRef(null);
 
   useEffect(() => {
@@ -77,7 +79,26 @@ export default function DocumentStatus({ lang }) {
         </section>
       )}
 
-      {doc.version && (
+      {doc.status === 'changes_requested' && !fixing && (
+        <button type="button" className="btn btn-primary btn-big" onClick={() => setFixing(true)}>
+          {t(dl, 'fixDetails')}
+        </button>
+      )}
+
+      {fixing && (
+        <FixDetails
+          doc={doc}
+          note={lastNote?.note ?? ''}
+          onCancel={() => setFixing(false)}
+          onDone={(updated) => {
+            lastStatus.current = updated.status; // Arzi already said "sent back"
+            setDoc(updated);
+            setFixing(false);
+          }}
+        />
+      )}
+
+      {doc.version && !fixing && (
         <>
           <section className="summary" lang={dl}>
             <h2>{t(dl, 'summaryHeading')}</h2>
@@ -97,10 +118,12 @@ export default function DocumentStatus({ lang }) {
         </>
       )}
 
-      <section>
-        <h2>{t(dl, 'detailsHeading')}</h2>
-        <FieldCards lang={dl} fields={doc.fields} current={null} />
-      </section>
+      {!fixing && (
+        <section>
+          <h2>{t(dl, 'detailsHeading')}</h2>
+          <FieldCards lang={dl} fields={doc.fields} current={null} />
+        </section>
+      )}
 
       <Link className="btn btn-big" to="/">{t(dl, 'newNotice')}</Link>
     </main>

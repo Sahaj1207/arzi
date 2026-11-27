@@ -1,12 +1,13 @@
 // App shell: header with badges, routes, and the "not legal advice" footer.
-import { useEffect, useState } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { DEFAULT_LANGUAGE, t } from '@arzi/shared';
 import { api } from './lib/api.js';
 import { getUserId, getSavedLanguage, saveLanguage } from './lib/userId.js';
 import ModeBadges from './components/ModeBadges.jsx';
 import Home from './pages/Home.jsx';
 import DocumentStatus from './pages/DocumentStatus.jsx';
+import Advocate from './pages/Advocate.jsx';
 
 export default function App() {
   const [config, setConfig] = useState(null);
@@ -21,13 +22,16 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const setLang = (code) => {
+  const setLang = useCallback((code) => {
     saveLanguage(code);
     setLangState(code);
-  };
+  }, []);
+
+  // The advocate desk uses a wider layout (laptop); citizen screens stay phone-width.
+  const wide = useLocation().pathname.startsWith('/advocate');
 
   return (
-    <div className="app">
+    <div className={`app ${wide ? 'app-wide' : ''}`}>
       <header className="topbar">
         <Link to="/" className="brand" aria-label="Arzi home">
           <span className="brand-mark" aria-hidden="true">अ</span>
@@ -39,6 +43,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home lang={lang} setLang={setLang} />} />
         <Route path="/documents/:id" element={<DocumentStatus lang={lang} />} />
+        <Route path="/advocate" element={<Advocate />} />
+        <Route path="/advocate/:id" element={<Advocate />} />
         <Route path="*" element={<Home lang={lang} setLang={setLang} />} />
       </Routes>
 

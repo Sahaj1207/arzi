@@ -187,6 +187,10 @@ const STATUS = {
     notFound: 'This document was not found on this device.',
     offline: 'No connection. Trying again…',
     version: 'Version {n}',
+    fixDetails: 'Fix my details',
+    fixIntro: 'The advocate wrote: {note}. Let us fix your details.',
+    fixSent: 'Thank you. Your corrected notice has been sent back to the advocate.',
+    fixTitle: 'Fix your details',
   },
   hi: {
     saving: 'आपकी जानकारी सेव हो रही है…',
@@ -208,6 +212,10 @@ const STATUS = {
     notFound: 'यह दस्तावेज़ इस फ़ोन पर नहीं मिला।',
     offline: 'कनेक्शन नहीं है। फिर से कोशिश कर रहे हैं…',
     version: 'संस्करण {n}',
+    fixDetails: 'मेरी जानकारी ठीक करें',
+    fixIntro: 'वकील ने लिखा है: {note}। चलिए आपकी जानकारी ठीक करते हैं।',
+    fixSent: 'धन्यवाद। ठीक किया हुआ नोटिस फिर से वकील को भेज दिया गया है।',
+    fixTitle: 'अपनी जानकारी ठीक करें',
   },
   mr: {
     saving: 'तुमची माहिती सेव्ह होत आहे…',
@@ -229,6 +237,10 @@ const STATUS = {
     notFound: 'हे कागदपत्र या फोनवर सापडले नाही.',
     offline: 'कनेक्शन नाही. पुन्हा प्रयत्न करत आहे…',
     version: 'आवृत्ती {n}',
+    fixDetails: 'माझी माहिती दुरुस्त करा',
+    fixIntro: 'वकिलांनी लिहिले आहे: {note}. चला, तुमची माहिती दुरुस्त करूया.',
+    fixSent: 'धन्यवाद. दुरुस्त केलेली नोटीस पुन्हा वकिलांकडे पाठवली आहे.',
+    fixTitle: 'तुमची माहिती दुरुस्त करा',
   },
 };
 for (const lang of Object.keys(STATUS)) Object.assign(STRINGS[lang], STATUS[lang]);

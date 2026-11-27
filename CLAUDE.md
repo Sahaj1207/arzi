@@ -21,7 +21,9 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - **Fully supported, no keys needed:** Hindi (`hi-IN`), Marathi (`mr-IN`), English (`en-IN`), and **Telugu (`te-IN`)**. Telugu is added **only after step 8 works end to end in Hindi, Marathi and English**. A Telugu-speaking teammate checks the translations and tests by voice. Telugu needs the same pieces as the others: UI and spoken strings, field questions, number words, month names, yes/no and intent keywords, the plain-language summary template, digit-by-digit read-back, and a bundled Noto Sans Telugu font for the PDF.
 - **Beta languages (lowest priority, cut first if time runs short):** only when `SARVAM_API_KEY` is set, offer the other Indian languages Sarvam supports. They use Sarvam speech-to-text (and Sarvam text-to-speech where available) plus the LLM for field extraction and the translated summary, since we have no hand-written parsers or templates for them. They are **clearly labelled "Beta"** in the UI. Without a Sarvam key they are **still shown in the picker, greyed out and not selectable, with the note "Needs Sarvam key"**, so judges can see the feature exists.
 - **Telugu read-back voice:** many browsers have no Telugu text-to-speech voice. If the browser has none **and** a Sarvam key is set, use **Sarvam text-to-speech** for Telugu. With no key and no browser voice, fall back to on-screen text highlighting.
-- **Advocate:** reviews and approves drafts on a laptop or phone.
+
+### Advocate
+- Reviews and approves drafts on a laptop or phone.
 
 ## 3. Core flow (must work end to end, citizen never has to type)
 
@@ -39,6 +41,9 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 4. **Draft.** Generate the legal notice in formal English legal-notice format, plus a simple-language summary in the user's chosen language below it. Status: "Sent to advocate for checking".
    - **Notice content rules:** the notice is sent by the **tenant in their own name** (not by the advocate on their behalf), and carries the line **"Reviewed by Advocate [name]"**. It gives the landlord **15 days** to pay. It claims **the deposit amount only**, plus a line reserving the right to claim interest and legal costs in legal proceedings.
 5. **Advocate review.** `/advocate` page: list of pending drafts, each with transcript, filled fields and the draft. Advocate can edit the text, then **Approve** or **Request changes** with a short note. Use one demo advocate (no real accounts). The page is protected by a simple **demo PIN** with a built-in default of `1234` (overridable with `ADVOCATE_PIN` in `.env`, documented in the README) so it works with no `.env`.
+   - **Small fixes:** the advocate edits the notice text directly; approving with edits saves a new version written by the advocate.
+   - **Request changes:** the citizen's status page shows the advocate's note and a **"Fix my details"** button. Arzi reads the note aloud, the citizen corrects any detail by voice (same "change the amount" flow as the summary), and the redrafted notice goes back to the advocate as the next version (version 2, 3, …) with status "Sent to advocate for checking".
+   - The "Reviewed by Advocate [name]" line appears only on approved documents.
 6. **Read-back + voice consent.** When approved, Arzi reads aloud the **plain-language summary of the approved notice in the user's language**, point by point (who it is sent to, the amount claimed, the deadline given, what happens next). The English legal notice itself is shown on screen; the user can also ask to hear it in English. Then Arzi asks: "Did you understand this document and do you agree? Say: yes, I understood and I agree." Record the user's spoken answer (audio file) and save it with the document.
 7. **History.** User's history page: each document with status, date, final PDF download, the consent recording (playable), and earlier versions. Share to WhatsApp via a share link/intent.
 
@@ -73,6 +78,7 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - **Drafting:**
   - **Demo mode (default, no key):** detect the deposit problem with simple keyword matching in Hindi, Marathi and English (e.g. deposit, security, advance, जमा, डिपॉज़िट, अनामत), then fill a well-written legal-notice template from the collected fields + a template-based summary in Hindi / Marathi / English. Must always work.
   - **AI mode (optional):** if an LLM key (`SARVAM_API_KEY` or `ANTHROPIC_API_KEY`) is set, use the LLM to understand free-form speech better and polish the draft. Show a small badge "Demo mode" vs "AI mode".
+  - **Name transliteration (step 9, needs `SARVAM_API_KEY`):** names and addresses spoken in Devanagari or Telugu script are transliterated into English letters for the **English notice**; the **summary keeps the original script**. Without a key, the original script is used in the notice (the advocate can edit it).
 - **API keys:** read only on the backend from `.env`. Never send keys to the browser and never commit `.env`. Add a simple per-user usage limit on paid API calls so a public live link cannot burn all credits.
 - **Consent recording:** `MediaRecorder` in the browser, upload to backend, store on disk. Risk: on some Android phones, recording and speech recognition fight over the mic. Test early; if it fails, record the audio and confirm the answer with a big "I understood and I agree" button as backup.
 - **Usage limit:** per anonymous ID **and** per IP daily cap on paid API calls (the localStorage ID is easy to reset).
@@ -121,3 +127,6 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - 2026-11-27: Updated build order after step 8: Render deploy → Telugu → 9 optional providers (Sarvam, Anthropic, Wispr) → 10 README/polish → Beta languages (needs step 9's Sarvam + LLM). Cut order if short on time: Beta languages first, then Wispr, then Sarvam text-to-speech.
 - 2026-11-27: Changed: without a Sarvam key, Beta languages are shown greyed out with "Needs Sarvam key" (not hidden), so judges can see them.
 - 2026-11-27: With a Sarvam key, Telugu read-back uses Sarvam text-to-speech when the browser has no Telugu voice (so Sarvam TTS for Telugu is kept even if general Sarvam TTS is cut).
+- 2026-11-27: Request changes → citizen sees note + "Fix my details", corrects by voice, redraft goes back as the next version. Advocate can also edit the text directly for small fixes.
+- 2026-11-27: Step 9 adds Sarvam transliteration of Devanagari/Telugu names and addresses into English letters for the English notice; summary keeps the original script.
+- 2026-11-27: Demo advocate default name "R. Mehta (demo)" (override `ADVOCATE_NAME`). "Reviewed by Advocate" line shown only once approved.

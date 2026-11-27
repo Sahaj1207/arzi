@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { runInterview } from '../src/conversation/interview.js';
+import { runInterview, runCorrection } from '../src/conversation/interview.js';
 
 const today = new Date(2026, 10, 27);
 
@@ -152,6 +152,23 @@ test('"Speak in Marathi" switches language and repeats the question', async () =
   assert.equal(r.fields.tenantName.text, 'रमेश कुमार');
   assert.ok(io.said.includes('ठीक आहे, आता मी मराठीत बोलते.'));
   assert.ok(io.asked.some((a) => a.prompt === 'तुमचे पूर्ण नाव काय आहे?'));
+});
+
+test('correction after "request changes": reads the note, fixes one field, keeps the rest', async () => {
+  const done = await runInterview(fakeIo(HAPPY_EN), { today });
+  const io = fakeIo(['change the amount', 'twenty five thousand', 'yes', 'yes']);
+  const r = await runCorrection(io, { fields: done.fields, note: 'Please confirm the deposit amount', today });
+  assert.equal(r.outcome, 'ready');
+  assert.equal(r.fields.depositAmount.amount, 25000);
+  assert.deepEqual(r.fields.tenantName, done.fields.tenantName);
+  assert.match(io.said[0], /The advocate wrote: Please confirm the deposit amount/);
+  assert.equal(r.transcript[0].a, 'change the amount');
+});
+
+test('correction: emergency still stops everything', async () => {
+  const done = await runInterview(fakeIo(HAPPY_EN), { today });
+  const r = await runCorrection(fakeIo(['he beat me']), { fields: done.fields, today });
+  assert.equal(r.outcome, 'emergency');
 });
 
 test('unparseable answers are retried, never guessed', async () => {

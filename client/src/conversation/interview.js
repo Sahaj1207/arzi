@@ -40,8 +40,36 @@ class Stop extends Error {
 const MAX_DESCRIBE_TRIES = 2;
 const REJECTIONS_BEFORE_TYPING = 2;
 
-export async function runInterview(io, { today = new Date() } = {}) {
-  const ctx = { problem: '', fields: {}, transcript: [] };
+export async function runInterview(io, opts = {}) {
+  const s = createSession(io, opts);
+  return s.guard(async () => {
+    await s.askProblem();
+    if (s.ctx.outcome) return s.ctx.outcome; // not a deposit problem
+    for (const field of FIELDS) await s.askField(field);
+    await s.confirmAll();
+    s.io.update({ current: 'done' });
+    await s.io.say(t(s.L(), 'allSet'));
+    return s.result('ready');
+  });
+}
+
+// After the advocate asks for changes: read the advocate's note, then the
+// same "Is everything correct? / change the amount" loop as the summary.
+export async function runCorrection(io, { fields, note = '', ...opts }) {
+  const s = createSession(io, opts);
+  s.ctx.fields = { ...fields };
+  io.update({ fields: { ...fields } });
+  return s.guard(async () => {
+    const clean = note.trim().replace(/[.।!?\s]+$/u, ''); // the sentence template adds its own full stop
+    if (clean) await s.io.say(t(s.L(), 'fixIntro', { note: clean }));
+    await s.confirmAll();
+    s.io.update({ current: 'done' });
+    return s.result('ready');
+  });
+}
+
+function createSession(io, { today = new Date() } = {}) {
+  const ctx = { problem: '', fields: {}, transcript: [], outcome: null };
   const L = () => io.getLang();
   const result = (outcome, extra = {}) => ({
     outcome,
@@ -122,8 +150,8 @@ export async function runInterview(io, { today = new Date() } = {}) {
     return result('other', { noted });
   }
 
-  try {
-    // ---- 1. The problem ----
+  // ---- 1. The problem ----
+  async function askProblem() {
     io.update({ current: 'describe' });
     let tries = 0;
     for (;;) {
@@ -134,18 +162,22 @@ export async function runInterview(io, { today = new Date() } = {}) {
       ctx.problem = ctx.problem ? `${ctx.problem} ${text}` : text;
       io.update({ problem: ctx.problem });
 
-      if (detectIntent(text).intent !== 'deposit') return await notDeposit();
-
+      if (detectIntent(text).intent !== 'deposit') {
+        ctx.outcome = await notDeposit();
+        return;
+      }
       const { value } = await q((lang) => t(lang, 'confirmDeposit'), parseYesNo);
-      if (value === 'yes') break;
+      if (value === 'yes') return;
       tries += 1;
-      if (tries >= MAX_DESCRIBE_TRIES) return await notDeposit();
+      if (tries >= MAX_DESCRIBE_TRIES) {
+        ctx.outcome = await notDeposit();
+        return;
+      }
     }
+  }
 
-    // ---- 2. The seven facts ----
-    for (const field of FIELDS) await askField(field);
-
-    // ---- 3. Summary and corrections ----
+  // ---- 3. Summary and corrections, until the user says everything is correct ----
+  async function confirmAll() {
     for (;;) {
       io.update({ current: 'summary' });
       const lines = FIELDS.map((f) => `${f.label[L()]}: ${displayFieldValue(f, ctx.fields[f.id], L())}`);
@@ -168,12 +200,17 @@ export async function runInterview(io, { today = new Date() } = {}) {
       const fieldId = answer.field ?? (await q((lang) => t(lang, 'whichField'), detectFieldToChange)).value;
       await askField(getField(fieldId));
     }
-
-    io.update({ current: 'done' });
-    await io.say(t(L(), 'allSet'));
-    return result('ready');
-  } catch (err) {
-    if (err instanceof Stop) return err.result;
-    throw err;
   }
+
+  // Runs a flow; an emergency or cancel anywhere ends it with that outcome.
+  async function guard(flow) {
+    try {
+      return await flow();
+    } catch (err) {
+      if (err instanceof Stop) return err.result;
+      throw err;
+    }
+  }
+
+  return { io, ctx, L, q, askField, askProblem, confirmAll, result, guard };
 }

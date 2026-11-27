@@ -4,12 +4,15 @@
 //   POST /api/documents          save a finished interview → draft v1, status pending_review
 //   GET  /api/documents?userId=  the citizen's documents (history)
 //   GET  /api/documents/:id?userId=   one document: status, fields, latest version, advocate notes
+//   POST /api/documents/:id/revise    citizen fixed details after "request changes" → next version
 //   POST /api/notes              "not a deposit problem" noted for an advocate
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { FIELDS, LANGUAGES, isValidFieldValue } from '@arzi/shared';
 import { db } from '../db.js';
+import { config } from '../config.js';
 import { draftDocument } from '../drafting/index.js';
+import { withReviewLine } from '../drafting/notice.js';
 
 export const documentsRouter = Router();
 export const notesRouter = Router();
@@ -45,9 +48,26 @@ const reviewsFor = db.prepare('SELECT action, note, created_at FROM reviews WHER
 const docsForUser = db.prepare(
   "SELECT * FROM documents WHERE user_id = ? AND kind = 'deposit_notice' ORDER BY created_at DESC, rowid DESC LIMIT 100",
 );
+const allVersions = db.prepare(
+  'SELECT version_no, notice_text, summary_text, author, created_at FROM versions WHERE document_id = ? ORDER BY version_no',
+);
+const updateForRevision = db.prepare(`
+  UPDATE documents SET status = 'pending_review', fields_json = ?, transcript = ?, updated_at = datetime('now')
+  WHERE id = ?`);
+
+const APPROVED = new Set(['approved', 'consented']);
+const shapeVersion = (v) => ({
+  no: v.version_no,
+  notice: v.notice_text,
+  summary: v.summary_text,
+  author: v.author,
+  createdAt: v.created_at,
+});
 
 // Shapes a DB row into what the browser gets (shared with the advocate API).
-export function serializeDocument(row, { withVersion = true } = {}) {
+//   raw: true → notice exactly as stored (for the advocate's editor)
+//   versions: true → include every version (history, advocate)
+export function serializeDocument(row, { withVersion = true, raw = false, versions = false } = {}) {
   const stored = JSON.parse(row.transcript || '{}');
   const out = {
     id: row.id,
@@ -62,13 +82,18 @@ export function serializeDocument(row, { withVersion = true } = {}) {
   };
   if (withVersion) {
     const v = latestVersion.get(row.id);
-    out.version = v
-      ? { no: v.version_no, notice: v.notice_text, summary: v.summary_text, author: v.author, createdAt: v.created_at }
-      : null;
+    out.version = v ? shapeVersion(v) : null;
+    // Only an approved notice carries "Reviewed by Advocate …".
+    if (out.version && !raw && APPROVED.has(row.status)) {
+      out.version.notice = withReviewLine(out.version.notice, config.advocateName);
+    }
     out.reviews = reviewsFor.all(row.id).map((r) => ({ action: r.action, note: r.note, createdAt: r.created_at }));
   }
+  if (versions) out.versions = allVersions.all(row.id).map(shapeVersion);
   return out;
 }
+
+export const getDocumentRow = (id) => getDoc.get(id);
 
 // ---------- routes ----------
 documentsRouter.post('/', async (req, res, next) => {
@@ -116,7 +141,36 @@ documentsRouter.get('/:id', (req, res) => {
   const row = getDoc.get(req.params.id);
   // Same answer for "not found" and "not yours", so IDs cannot be probed.
   if (!row || row.user_id !== userId) return bad(res, 'not_found', 404);
-  res.json(serializeDocument(row));
+  res.json(serializeDocument(row, { versions: true }));
+});
+
+// After the advocate asks for changes, the citizen corrects details by voice.
+// The notice is redrafted from the corrected fields and becomes the next version.
+documentsRouter.post('/:id/revise', async (req, res, next) => {
+  try {
+    const { userId, fields, transcript } = req.body ?? {};
+    const row = getDoc.get(req.params.id);
+    if (!row || row.user_id !== userId) return bad(res, 'not_found', 404);
+    if (row.status !== 'changes_requested') return bad(res, 'not_editable', 409);
+    if (!fields || typeof fields !== 'object') return bad(res, 'missing_fields');
+    for (const f of FIELDS) {
+      if (!isValidFieldValue(f, fields[f.id])) return bad(res, `invalid_field:${f.id}`);
+    }
+    const clean = Object.fromEntries(FIELDS.map((f) => [f.id, fields[f.id]]));
+    const draft = await draftDocument({ fields: clean, lang: row.language });
+
+    const stored = JSON.parse(row.transcript || '{}');
+    stored.entries = [...(stored.entries ?? []), ...cleanTranscript(transcript)].slice(-400);
+    const nextNo = (latestVersion.get(row.id)?.version_no ?? 0) + 1;
+
+    db.transaction(() => {
+      insertVersion.run(row.id, nextNo, draft.notice, draft.summary, 'citizen');
+      updateForRevision.run(JSON.stringify(clean), JSON.stringify(stored), row.id);
+    })();
+    res.json(serializeDocument(getDoc.get(row.id), { versions: true }));
+  } catch (err) {
+    next(err);
+  }
 });
 
 notesRouter.post('/', (req, res) => {

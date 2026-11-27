@@ -57,7 +57,8 @@ export function useInterview({ lang, setLang }) {
 
   useEffect(() => stop, [stop]);
 
-  const start = useCallback(async () => {
+  // runner: which flow to run (the full interview, or runCorrection for fixes).
+  const start = useCallback(async (runner = runInterview) => {
     stop();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -142,7 +143,7 @@ export function useInterview({ lang, setLang }) {
       },
     };
 
-    const outcome = await runInterview(io);
+    const outcome = await runner(io);
     if (!signal.aborted) patch({ running: false, outcome, phase: 'idle' });
     return outcome;
   }, [patch, setLang, stop]);

@@ -6,6 +6,7 @@ import { publicConfig, REPO_ROOT } from './config.js';
 import { db } from './db.js';
 import { pdfRouter } from './routes/pdf.js';
 import { documentsRouter, notesRouter } from './routes/documents.js';
+import { advocateRouter } from './routes/advocate.js';
 import { findChromium } from './pdf/render.js';
 
 export function createApp() {
@@ -25,6 +26,7 @@ export function createApp() {
 
   app.use('/api/documents', documentsRouter);
   app.use('/api/notes', notesRouter);
+  app.use('/api/advocate', advocateRouter);
   app.use('/api/pdf', pdfRouter);
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'not_found' }));
