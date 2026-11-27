@@ -1,15 +1,44 @@
 // Anonymous citizen ID, kept in localStorage so history survives reloads on this device.
+// Some in-app browsers and private modes throw on localStorage: then the ID lives in
+// memory for this visit, so buttons keep working (history just does not persist).
 const KEY = 'arzi.userId';
+const memory = new Map();
+
+const store = {
+  get: (k) => {
+    try {
+      return localStorage.getItem(k);
+    } catch {
+      return memory.get(k) ?? null;
+    }
+  },
+  set: (k, v) => {
+    try {
+      localStorage.setItem(k, v);
+    } catch {
+      memory.set(k, v);
+    }
+  },
+};
+
+function newId() {
+  try {
+    if (crypto?.randomUUID) return crypto.randomUUID();
+  } catch {
+    /* insecure context or old browser */
+  }
+  return `u-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
 
 export function getUserId() {
-  let id = localStorage.getItem(KEY);
+  let id = store.get(KEY);
   if (!id) {
-    id = crypto.randomUUID?.() ?? `u-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    localStorage.setItem(KEY, id);
+    id = newId();
+    store.set(KEY, id);
   }
   return id;
 }
 
 const LANG_KEY = 'arzi.language';
-export const getSavedLanguage = () => localStorage.getItem(LANG_KEY);
-export const saveLanguage = (code) => localStorage.setItem(LANG_KEY, code);
+export const getSavedLanguage = () => store.get(LANG_KEY);
+export const saveLanguage = (code) => store.set(LANG_KEY, code);

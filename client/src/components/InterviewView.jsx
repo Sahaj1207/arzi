@@ -1,41 +1,66 @@
-// Everything shown while Arzi is talking with the citizen: progress, mic status,
-// what Arzi says, the value being confirmed, live transcript, the pause and
-// keyboard fallbacks, and the answer cards. Used by the interview and by "Fix my details".
+// What the citizen sees while Arzi talks with them:
+//   progress bar → one large card with the current question → mic status →
+//   live words → the value being confirmed (very large) → fallbacks → answers so far.
+// `sample` = the scripted "Try a sample case": never shows a red mic or
+// "speak now", because nobody is expected to speak.
 import { FIELDS, t } from '@arzi/shared';
 import MicButton from './MicButton.jsx';
-import ArziSays from './ArziSays.jsx';
 import LiveTranscript from './LiveTranscript.jsx';
 import KeyboardFallback from './KeyboardFallback.jsx';
-import FieldCards from './FieldCards.jsx';
 import ConfirmValue from './ConfirmValue.jsx';
+import AnswerList from './AnswerList.jsx';
 
-export default function InterviewView({ lang, view, respond, showCards }) {
-  const micState = view.phase === 'speaking' ? 'speaking' : view.phase === 'listening' ? 'listening' : 'idle';
+export default function InterviewView({ lang, view, respond, sample = false, showAnswers = true }) {
   const fieldIndex = FIELDS.findIndex((f) => f.id === view.current);
+  const filled = Object.keys(view.fields ?? {}).length;
+  const step = fieldIndex === -1 ? filled : fieldIndex;
+
+  let micState = view.phase === 'speaking' ? 'speaking' : view.phase === 'listening' ? 'listening' : 'idle';
+  if (sample && view.running) micState = 'sample';
+  const micLabel = sample
+    ? t(lang, 'playingSample')
+    : t(lang, view.phase === 'paused' ? 'tapToContinue' : view.phase === 'listening' ? 'listening' : 'tapToSpeak');
 
   return (
-    <>
-      {fieldIndex !== -1 && view.running && (
-        <p className="progress">{t(lang, 'step', { n: fieldIndex + 1, total: FIELDS.length })}</p>
+    <div className="interview">
+      {(fieldIndex !== -1 || filled > 0) && (
+        <div className="progress" aria-label={t(lang, 'step', { n: step + 1, total: FIELDS.length })}>
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${(Math.min(filled, FIELDS.length) / FIELDS.length) * 100}%` }} />
+          </div>
+          <span className="progress-text">
+            {Math.min(step + 1, FIELDS.length)} / {FIELDS.length}
+          </span>
+        </div>
       )}
 
-      {view.running && (
-        <MicButton
-          state={micState}
-          size="small"
-          label={t(lang, view.phase === 'paused' ? 'tapToContinue' : 'tapToSpeak')}
-          onClick={() => respond({ voice: true })}
-          disabled={!['paused', 'keyboard'].includes(view.phase)}
-        />
+      {view.text && (
+        <div
+          className={`question ${view.phase === 'speaking' ? 'is-speaking' : ''} ${view.voiceless ? 'is-voiceless' : ''}`}
+          aria-live="polite"
+        >
+          <p>{view.text}</p>
+        </div>
       )}
-
-      <ArziSays text={view.text} speaking={view.phase === 'speaking'} voiceless={view.voiceless} />
 
       <ConfirmValue lang={lang} pending={view.pending} />
 
-      {view.phase === 'listening' && <LiveTranscript lang={lang} text={view.interim} listening />}
+      <div className="interview-status">
+        {view.running && (
+          <MicButton
+            state={micState}
+            size="small"
+            label={micLabel}
+            onClick={() => respond({ voice: true })}
+            disabled={sample || !['paused', 'keyboard'].includes(view.phase)}
+          />
+        )}
+        {view.phase === 'listening' && (
+          <LiveTranscript lang={lang} text={view.interim} listening label={sample ? t(lang, 'sampleAnswer') : null} />
+        )}
+      </div>
 
-      {view.phase === 'paused' && (
+      {view.phase === 'paused' && !sample && (
         <>
           <p className="paused-note">{t(lang, 'pausedPrompt')}</p>
           <button type="button" className="btn btn-primary btn-big" onClick={() => respond({ tap: true })}>
@@ -44,7 +69,7 @@ export default function InterviewView({ lang, view, respond, showCards }) {
         </>
       )}
 
-      {view.phase === 'keyboard' && (
+      {view.phase === 'keyboard' && !sample && (
         <KeyboardFallback
           key={`${view.current}-${view.text}`}
           lang={lang}
@@ -54,7 +79,7 @@ export default function InterviewView({ lang, view, respond, showCards }) {
         />
       )}
 
-      {showCards && <FieldCards lang={lang} fields={view.fields} current={view.current} />}
-    </>
+      {showAnswers && filled > 0 && <AnswerList lang={lang} fields={view.fields} current={view.current} onlyFilled />}
+    </div>
   );
 }

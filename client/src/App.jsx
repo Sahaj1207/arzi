@@ -38,26 +38,26 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true">अ</span>
           <span className="brand-name">Arzi</span>
         </Link>
-        <div className="topbar-right">
-          {!wide && (
-            <Link to="/history" className="nav-link">
-              {t(lang, 'history')}
-            </Link>
-          )}
-          <ModeBadges config={config} />
-        </div>
+        {!wide && (
+          <Link to="/history" className="nav-link">
+            {t(lang, 'history')}
+          </Link>
+        )}
       </header>
 
       <Routes>
         <Route path="/" element={<Home lang={lang} setLang={setLang} config={config} />} />
         <Route path="/documents/:id" element={<DocumentStatus lang={lang} />} />
         <Route path="/history" element={<History lang={lang} />} />
-        <Route path="/advocate" element={<Advocate />} />
-        <Route path="/advocate/:id" element={<Advocate />} />
+        <Route path="/advocate" element={<Advocate config={config} />} />
+        <Route path="/advocate/:id" element={<Advocate config={config} />} />
         <Route path="*" element={<Home lang={lang} setLang={setLang} config={config} />} />
       </Routes>
 
-      <footer className="footer">{t(lang, 'notLegalAdvice')}</footer>
+      <footer className="footer">
+        <p>{t(lang, 'notLegalAdvice')}</p>
+        <ModeBadges config={config} />
+      </footer>
     </div>
   );
 }

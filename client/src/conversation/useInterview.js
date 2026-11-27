@@ -59,7 +59,9 @@ export function useInterview({ lang, setLang }) {
 
   // runner: which flow to run (the full interview, or runCorrection for fixes).
   // provider: speech provider for this run (the sample case passes a scripted one).
-  const start = useCallback(async (runner = runInterview, { provider: fixedProvider } = {}) => {
+  // speakWith: replaces the voice for this run (the sample case shows text briefly
+  // instead of speaking, so a question takes ~3 s, not ~10 s).
+  const start = useCallback(async (runner = runInterview, { provider: fixedProvider, speakWith } = {}) => {
     stop();
     const providerFor = () => fixedProvider ?? getSpeechProvider();
     const ac = new AbortController();
@@ -69,7 +71,7 @@ export function useInterview({ lang, setLang }) {
 
     const speakTracked = async (text, l) => {
       if (signal.aborted) return;
-      const { spoken } = await speak(text, l);
+      const { spoken } = await (speakWith ?? speak)(text, l);
       if (!signal.aborted) patch({ voiceless: !spoken });
     };
 
@@ -84,6 +86,7 @@ export function useInterview({ lang, setLang }) {
         if (signal.aborted) return;
         patch({ text, phase: 'speaking', interim: '' });
         await speakTracked(text, langRef.current);
+        // (The sample case's quick "speak" just pauses long enough to read.)
         if (!signal.aborted) patch({ phase: 'idle' });
       },
       ask: async ({ prompt, parse, keyboard }) => {

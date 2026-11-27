@@ -66,6 +66,8 @@ export function publicConfig(extra = {}) {
     mode: p.drafting === 'demo' ? 'demo' : 'ai',
     aiProviders,
     advocateName: config.advocateName,
+    // Shown on the advocate login only while the documented default is in use.
+    demoPin: env('ADVOCATE_PIN') ? null : '1234',
     ...extra,
   };
 }

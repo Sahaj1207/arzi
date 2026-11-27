@@ -408,6 +408,72 @@ const DEMO = {
 };
 for (const lang of Object.keys(DEMO)) Object.assign(STRINGS[lang], DEMO[lang]);
 
+// Home page explainer, trust cues, sample-playback state (design pass after live test).
+const DESIGN = {
+  en: {
+    howItWorks: 'How it works',
+    step1Title: 'Speak',
+    step1Body: 'Tell Arzi about your deposit in your own words. No typing.',
+    step2Title: 'An advocate checks it',
+    step2Body: 'A lawyer reads the notice and approves it or asks for a fix.',
+    step3Title: 'Hear it and agree',
+    step3Body: 'Arzi reads it to you in simple words. You say yes, and get the PDF.',
+    verifiedBadge: 'Advocate-verified',
+    verifiedBody: 'Every notice is checked by an advocate before it is final.',
+    privateBadge: 'Your details stay private',
+    privateBody: 'No login, no phone number. Only you and the checking advocate see your notice.',
+    playingSample: 'Playing sample',
+    sampleAnswer: 'Sample answer',
+    skipToEnd: 'Skip to end',
+    yourAnswers: 'Your answers',
+    opening: 'Opening…',
+    skipFailed: 'Could not open the sample. Check your internet and tap again.',
+    statusLine: 'Voice: {speech}. Mode: {mode}.',
+    modeDemo: 'demo (no AI keys)',
+    modeAi: 'AI',
+    speechBrowser: 'browser speech',
+  },
+  hi: {
+    howItWorks: 'यह कैसे काम करता है',
+    step1Title: 'बोलिए',
+    step1Body: 'अपने डिपॉज़िट के बारे में अपने शब्दों में बताइए। कुछ लिखना नहीं है।',
+    step2Title: 'वकील जाँचते हैं',
+    step2Body: 'एक वकील नोटिस पढ़कर मंज़ूर करते हैं या सुधार माँगते हैं।',
+    step3Title: 'सुनिए और सहमति दीजिए',
+    step3Body: 'अर्ज़ी आसान शब्दों में पढ़कर सुनाती है। आप हाँ बोलिए और PDF पाइए।',
+    verifiedBadge: 'वकील से जाँचा हुआ',
+    verifiedBody: 'हर नोटिस पक्का होने से पहले एक वकील जाँचते हैं।',
+    privateBadge: 'आपकी जानकारी सुरक्षित है',
+    privateBody: 'न लॉगिन, न फ़ोन नंबर। आपका नोटिस सिर्फ़ आप और जाँचने वाले वकील देखते हैं।',
+    playingSample: 'नमूना चल रहा है',
+    sampleAnswer: 'नमूना जवाब',
+    skipToEnd: 'सीधे अंत पर जाइए',
+    yourAnswers: 'आपके जवाब',
+    opening: 'खुल रहा है…',
+    skipFailed: 'नमूना नहीं खुला। इंटरनेट जाँचिए और फिर से दबाइए।',
+  },
+  mr: {
+    howItWorks: 'हे कसे काम करते',
+    step1Title: 'बोला',
+    step1Body: 'तुमच्या अनामत रकमेबद्दल तुमच्या शब्दांत सांगा. काहीही लिहायचे नाही.',
+    step2Title: 'वकील तपासतात',
+    step2Body: 'एक वकील नोटीस वाचून मंजूर करतात किंवा दुरुस्ती सुचवतात.',
+    step3Title: 'ऐका आणि संमती द्या',
+    step3Body: 'अर्ज़ी सोप्या शब्दांत वाचून दाखवते. तुम्ही हो म्हणा आणि PDF मिळवा.',
+    verifiedBadge: 'वकिलांनी तपासलेले',
+    verifiedBody: 'प्रत्येक नोटीस अंतिम होण्यापूर्वी एक वकील तपासतात.',
+    privateBadge: 'तुमची माहिती सुरक्षित आहे',
+    privateBody: 'लॉगिन नाही, फोन नंबर नाही. तुमची नोटीस फक्त तुम्ही आणि तपासणारे वकील पाहतात.',
+    playingSample: 'नमुना सुरू आहे',
+    sampleAnswer: 'नमुना उत्तर',
+    skipToEnd: 'थेट शेवटी जा',
+    yourAnswers: 'तुमची उत्तरे',
+    opening: 'उघडत आहे…',
+    skipFailed: 'नमुना उघडला नाही. इंटरनेट तपासा आणि पुन्हा दाबा.',
+  },
+};
+for (const lang of Object.keys(DESIGN)) Object.assign(STRINGS[lang], DESIGN[lang]);
+
 // t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.
 export function t(lang, key, vars) {
   const s = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;

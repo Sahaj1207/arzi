@@ -9,7 +9,6 @@ import { speak } from '../voice/tts.js';
 import { useInterview } from '../conversation/useInterview.js';
 import { runCorrection } from '../conversation/interview.js';
 import InterviewView from './InterviewView.jsx';
-import FieldCards from './FieldCards.jsx';
 import EmergencyPanel from './EmergencyPanel.jsx';
 
 export default function FixDetails({ doc, note, onDone, onCancel }) {
@@ -45,7 +44,7 @@ export default function FixDetails({ doc, note, onDone, onCancel }) {
   return (
     <section className="fix">
       <h2>{t(lang, 'fixTitle')}</h2>
-      <InterviewView lang={lang} view={view} respond={respond} showCards={false} />
+      <InterviewView lang={lang} view={view} respond={respond} />
       {save === 'saving' && <p className="muted">{t(lang, 'saving')}</p>}
       {save === 'failed' && (
         <div className="save-failed" role="alert">
@@ -55,7 +54,6 @@ export default function FixDetails({ doc, note, onDone, onCancel }) {
           </button>
         </div>
       )}
-      <FieldCards lang={lang} fields={view.fields} current={view.current} />
       <button
         type="button"
         className="btn btn-link"

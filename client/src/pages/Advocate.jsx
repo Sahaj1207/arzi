@@ -23,7 +23,7 @@ const TABS = [
 const langName = (code) => LANGUAGES.find((l) => l.code === code)?.englishLabel ?? code;
 const when = (sqlTime) => new Date(`${sqlTime.replace(' ', 'T')}Z`).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 
-export default function Advocate() {
+export default function Advocate({ config }) {
   const [authed, setAuthed] = useState(Boolean(getPin()));
   const { id } = useParams();
 
@@ -32,7 +32,7 @@ export default function Advocate() {
     setAuthed(false);
   }, []);
 
-  if (!authed) return <PinGate onOk={() => setAuthed(true)} />;
+  if (!authed) return <PinGate onOk={() => setAuthed(true)} demoPin={config?.demoPin} />;
   return (
     <main className="adv">
       <div className="adv-top">
@@ -46,7 +46,7 @@ export default function Advocate() {
   );
 }
 
-function PinGate({ onOk }) {
+function PinGate({ onOk, demoPin }) {
   const [pin, setPinValue] = useState('');
   const [error, setError] = useState('');
 
@@ -65,7 +65,12 @@ function PinGate({ onOk }) {
     <main className="adv adv-gate">
       <h1>Advocate review</h1>
       <form onSubmit={submit} className="pin-form">
-        <label htmlFor="pin">Demo PIN</label>
+        {demoPin && (
+          <p className="pin-hint">
+            Demo PIN: <strong>{demoPin}</strong>
+          </p>
+        )}
+        <label htmlFor="pin">Enter PIN</label>
         <input
           id="pin"
           type="password"
@@ -79,7 +84,7 @@ function PinGate({ onOk }) {
         <button type="submit" className="btn btn-primary btn-big" disabled={!pin}>
           Open
         </button>
-        <p className="muted">Prototype: one demo advocate. The default PIN is in the README.</p>
+        <p className="muted">Prototype with one demo advocate. Anyone with the PIN can review sample cases.</p>
       </form>
     </main>
   );

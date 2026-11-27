@@ -7,7 +7,8 @@ import { t } from '@arzi/shared';
 import { api } from '../lib/api.js';
 import { getUserId } from '../lib/userId.js';
 import { speak } from '../voice/tts.js';
-import FieldCards from '../components/FieldCards.jsx';
+import AnswerList from '../components/AnswerList.jsx';
+import Stamp from '../components/Stamp.jsx';
 import FixDetails from '../components/FixDetails.jsx';
 import ReadBack from '../components/ReadBack.jsx';
 import ConsentRecord from '../components/ConsentRecord.jsx';
@@ -97,8 +98,17 @@ export default function DocumentStatus({ lang }) {
   return (
     <main className="doc">
       <div className={`status status-${doc.status}`} role="status" aria-live="polite">
-        <span className="status-dot" aria-hidden="true" />
-        <span>{t(dl, `status_${doc.status}`)}</span>
+        {doc.status === 'approved' || doc.status === 'consented' ? (
+          <Stamp size={64} className="status-stamp" />
+        ) : (
+          <span className="status-dot" aria-hidden="true" />
+        )}
+        <span>
+          {t(dl, `status_${doc.status}`)}
+          {(doc.status === 'approved' || doc.status === 'consented') && (
+            <small className="status-verified">{t(dl, 'verifiedBadge')}</small>
+          )}
+        </span>
       </div>
       {doc.status === 'pending_review' && (
         <p className="muted">{t(dl, demo.sample ? 'demoAdvocateChecking' : 'autoUpdate')}</p>
@@ -175,7 +185,7 @@ export default function DocumentStatus({ lang }) {
       {!fixing && (
         <section>
           <h2>{t(dl, 'detailsHeading')}</h2>
-          <FieldCards lang={dl} fields={doc.fields} current={null} />
+          <AnswerList lang={dl} fields={doc.fields} current={null} title={false} />
         </section>
       )}
 
