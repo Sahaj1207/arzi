@@ -1,2 +1,10 @@
 export * from './languages.js';
 export * from './i18n.js';
+export * from './fields.js';
+export * from './format.js';
+export * from './intent.js';
+export { normalize, tokenize } from './parse/normalize.js';
+export { extractNumbers } from './parse/numbers.js';
+export { parseAmount, MAX_AMOUNT } from './parse/amount.js';
+export { parseDate, parseDuration, parsePending } from './parse/date.js';
+export { parseYesNo } from './parse/yesno.js';
