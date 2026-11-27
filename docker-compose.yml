@@ -1,0 +1,18 @@
+# Start Arzi with:  docker compose up
+# Then open http://localhost:3000 in Chrome. No .env or API keys needed.
+services:
+  arzi:
+    build: .
+    image: arzi:local
+    ports:
+      - "3000:3000"
+    # Optional keys (see .env.example). If .env is missing, Arzi runs in Demo mode.
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - arzi-data:/app/data   # SQLite DB, consent recordings, PDFs
+    restart: unless-stopped
+
+volumes:
+  arzi-data:
