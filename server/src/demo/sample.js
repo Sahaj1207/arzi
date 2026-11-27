@@ -52,6 +52,18 @@ export const SAMPLE = {
   },
 };
 
+// Telugu sample (draft, awaiting review): the same story, set in Hyderabad.
+SAMPLE.te = {
+  problem: 'నేను రెండు నెలల క్రితం పీజీ ఖాళీ చేశాను కానీ యజమాని నా సెక్యూరిటీ డిపాజిట్ తిరిగి ఇవ్వలేదు.',
+  fields: {
+    tenantName: { text: 'ప్రియా శర్మ' },
+    tenantAddress: { text: 'రూమ్ 12, శాంతి పీజీ, అమీర్‌పేట్, హైదరాబాద్ 500016' },
+    landlordName: { text: 'రాజేష్ గుప్తా' },
+    landlordAddress: { text: '8 మైత్రివనం రోడ్, అమీర్‌పేట్, హైదరాబాద్ 500016' },
+    ...COMMON,
+  },
+};
+
 const SEED_USER = 'sample-citizen-seed';
 const DEMO_NOTE = 'Sample case: approved automatically by the demo advocate.';
 

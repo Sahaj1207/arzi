@@ -12,18 +12,18 @@ import { digitValue, wordValue, MODIFIERS } from './numberWords.js';
 import { durationUnit, DAYS_PER_UNIT } from './units.js';
 
 const MONTH_WORDS = [
-  ['january', 'jan', 'जनवरी', 'जानेवारी'],
-  ['february', 'feb', 'फरवरी', 'फ़रवरी', 'फेब्रुवारी'],
-  ['march', 'mar', 'मार्च'],
-  ['april', 'apr', 'अप्रैल', 'अप्रेल', 'एप्रिल'],
-  ['may', 'मई', 'मे'],
-  ['june', 'jun', 'जून'],
-  ['july', 'jul', 'जुलाई', 'जुलै'],
-  ['august', 'aug', 'अगस्त', 'ऑगस्ट'],
-  ['september', 'sep', 'sept', 'सितंबर', 'सितम्बर', 'सप्टेंबर'],
-  ['october', 'oct', 'अक्टूबर', 'अक्तूबर', 'ऑक्टोबर'],
-  ['november', 'nov', 'नवंबर', 'नवम्बर', 'नोव्हेंबर'],
-  ['december', 'dec', 'दिसंबर', 'दिसम्बर', 'डिसेंबर'],
+  ['january', 'jan', 'जनवरी', 'जानेवारी', 'జనవరి'],
+  ['february', 'feb', 'फरवरी', 'फ़रवरी', 'फेब्रुवारी', 'ఫిబ్రవరి', 'ఫిబ్రవరీ'],
+  ['march', 'mar', 'मार्च', 'మార్చి', 'మార్చ్'],
+  ['april', 'apr', 'अप्रैल', 'अप्रेल', 'एप्रिल', 'ఏప్రిల్', 'ఏప్రిల'],
+  ['may', 'मई', 'मे', 'మే'],
+  ['june', 'jun', 'जून', 'జూన్', 'జూను'],
+  ['july', 'jul', 'जुलाई', 'जुलै', 'జూలై', 'జులై'],
+  ['august', 'aug', 'अगस्त', 'ऑगस्ट', 'ఆగస్టు', 'ఆగస్ట్'],
+  ['september', 'sep', 'sept', 'सितंबर', 'सितम्बर', 'सप्टेंबर', 'సెప్టెంబర్', 'సెప్టెంబరు'],
+  ['october', 'oct', 'अक्टूबर', 'अक्तूबर', 'ऑक्टोबर', 'అక్టోబర్', 'అక్టోబరు'],
+  ['november', 'nov', 'नवंबर', 'नवम्बर', 'नोव्हेंबर', 'నవంబర్', 'నవంబరు'],
+  ['december', 'dec', 'दिसंबर', 'दिसम्बर', 'डिसेंबर', 'డిసెంబర్', 'డిసెంబరు'],
 ];
 const MONTHS = new Map();
 MONTH_WORDS.forEach((words, i) => words.forEach((w) => MONTHS.set(normalize(w), i + 1)));
@@ -35,13 +35,20 @@ const monthOf = (tok) => {
   return null;
 };
 
-const WEAK_MONTHS = new Set(['may', 'mar', 'मे'].map(normalize));
+const WEAK_MONTHS = new Set(['may', 'mar', 'मे', 'మే'].map(normalize));
 
-const AGO_WORDS = ['ago', 'back', 'before', 'pehle', 'pahle', 'pehale', 'पहले', 'पूर्वी', 'आधी', 'agodar', 'अगोदर'];
-const LAST_MONTH = ['last month', 'pichhle mahine', 'pichle mahine', 'पिछले महीने', 'पिछला महीना', 'मागच्या महिन्यात', 'गेल्या महिन्यात', 'मागील महिन्यात'];
-const LAST_WEEK = ['last week', 'pichhle hafte', 'pichle hafte', 'पिछले हफ्ते', 'पिछले सप्ताह', 'मागच्या आठवड्यात', 'गेल्या आठवड्यात'];
-const TODAY = ['today', 'aaj', 'आज'];
-const YESTERDAY = ['yesterday', 'काल']; // Hindi "kal" can mean yesterday OR tomorrow, so it is not trusted
+const AGO_WORDS = ['ago', 'back', 'before', 'pehle', 'pahle', 'pehale', 'पहले', 'पूर्वी', 'आधी', 'agodar', 'अगोदर', 'క్రితం', 'ముందు'];
+const LAST_MONTH = [
+  'last month', 'pichhle mahine', 'pichle mahine', 'पिछले महीने', 'पिछला महीना', 'मागच्या महिन्यात', 'गेल्या महिन्यात',
+  'मागील महिन्यात', 'గత నెల', 'పోయిన నెల', 'పోయిన నెలలో', 'గత నెలలో',
+];
+const LAST_WEEK = [
+  'last week', 'pichhle hafte', 'pichle hafte', 'पिछले हफ्ते', 'पिछले सप्ताह', 'मागच्या आठवड्यात', 'गेल्या आठवड्यात',
+  'గత వారం', 'పోయిన వారం',
+];
+const TODAY = ['today', 'aaj', 'आज', 'ఈరోజు', 'ఇవాళ', 'ఈ రోజు'];
+// Hindi "kal" can mean yesterday OR tomorrow, so it is not trusted. Marathi काल and Telugu నిన్న are.
+const YESTERDAY = ['yesterday', 'काल', 'నిన్న'];
 
 // ---- small date helpers (all in UTC to avoid timezone surprises) ----
 const pad = (n) => String(n).padStart(2, '0');

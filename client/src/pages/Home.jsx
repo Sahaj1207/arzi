@@ -16,7 +16,7 @@ import { useInterview } from '../conversation/useInterview.js';
 import { runInterview } from '../conversation/interview.js';
 import { createScriptedProvider } from '../demo/scriptedProvider.js';
 import { SAMPLE_SCRIPT } from '../demo/sampleScript.js';
-import { getAiConsent, setAiConsent } from '../lib/prefs.js';
+import { getAiConsent, setAiConsent, isLanguageVisible } from '../lib/prefs.js';
 import { hasSpeechRecognition, isSecureForMic } from '../voice/support.js';
 
 // Sample case pacing: Arzi's lines are shown (not spoken) just long enough to
@@ -123,8 +123,13 @@ export default function Home({ lang, setLang, config }) {
               </p>
             )}
             {/* Language names stay in their own script, even under browser page-translation. */}
-            <div className="lang-switch" role="radiogroup" aria-label={t(lang, 'chooseLanguage')} translate="no">
-              {LANGUAGES.map((l) => (
+            <div
+              className={`lang-switch count-${LANGUAGES.filter(isLanguageVisible).length}`}
+              role="radiogroup"
+              aria-label={t(lang, 'chooseLanguage')}
+              translate="no"
+            >
+              {LANGUAGES.filter(isLanguageVisible).map((l) => (
                 <button
                   key={l.code}
                   type="button"

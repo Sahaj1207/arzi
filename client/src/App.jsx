@@ -5,6 +5,7 @@ import { LANGUAGES, t } from '@arzi/shared';
 import { api } from './lib/api.js';
 import { getUserId, getSavedLanguage, saveLanguage, detectLanguage } from './lib/userId.js';
 import ModeBadges from './components/ModeBadges.jsx';
+import { readReviewFlagFromUrl, isLanguageVisible } from './lib/prefs.js';
 import Home from './pages/Home.jsx';
 import DocumentStatus from './pages/DocumentStatus.jsx';
 import Advocate from './pages/Advocate.jsx';
@@ -13,8 +14,12 @@ import History from './pages/History.jsx';
 export default function App() {
   const [config, setConfig] = useState(null);
   const [lang, setLangState] = useState(() => {
+    readReviewFlagFromUrl(); // ?telugu=1 turns on Telugu for reviewers on this device
+    const visible = (code) => LANGUAGES.some((l) => l.code === code && isLanguageVisible(l));
     const saved = getSavedLanguage();
-    return saved && LANGUAGES.some((l) => l.code === saved) ? saved : detectLanguage();
+    if (saved && visible(saved)) return saved;
+    const detected = detectLanguage();
+    return visible(detected) ? detected : 'en';
   });
 
   useEffect(() => {

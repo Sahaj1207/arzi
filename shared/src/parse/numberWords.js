@@ -27,6 +27,18 @@ const MARATHI_1_TO_99 = `एक दोन तीन चार पाच सह�
 एक्क्याऐंशी ब्याऐंशी त्र्याऐंशी चौर्‍याऐंशी पंच्याऐंशी शहाऐंशी सत्त्याऐंशी अठ्ठ्याऐंशी एकोणनव्वद नव्वद
 एक्क्याण्णव ब्याण्णव त्र्याण्णव चौर्‍याण्णव पंच्याण्णव शहाण्णव सत्त्याण्णव अठ्ठ्याण्णव नव्व्याण्णव`;
 
+// Telugu: 1–19 and the tens are words of their own; 21–99 are said as two
+// words ("ఇరవై ఐదు" = 25), which the number reader joins like "twenty five".
+const TELUGU = {
+  1: ['ఒకటి', 'ఒక'], 2: ['రెండు'], 3: ['మూడు'], 4: ['నాలుగు'], 5: ['ఐదు', 'అయిదు'],
+  6: ['ఆరు'], 7: ['ఏడు'], 8: ['ఎనిమిది'], 9: ['తొమ్మిది'], 10: ['పది'],
+  11: ['పదకొండు'], 12: ['పన్నెండు'], 13: ['పదమూడు'], 14: ['పద్నాలుగు'], 15: ['పదిహేను'],
+  16: ['పదహారు'], 17: ['పదిహేడు'], 18: ['పద్దెనిమిది'], 19: ['పందొమ్మిది'],
+  20: ['ఇరవై'], 30: ['ముప్పై', 'ముప్పయి'], 40: ['నలభై', 'నలబై'], 50: ['యాభై', 'యాబై'],
+  60: ['అరవై'], 70: ['డెబ్బై'], 80: ['ఎనభై', 'ఎనబై'], 90: ['తొంభై', 'తొంబై'],
+  1.5: ['ఒకటిన్నర'], 2.5: ['రెండున్నర'],
+};
+
 // Extra spellings speech engines produce.
 const EXTRA_WORDS = {
   0: ['zero', 'शून्य', 'shunya', 'sifar'],
@@ -74,11 +86,11 @@ const EXTRA_WORDS = {
 
 // Words that multiply what came before ("bees hazaar" = 20 × 1000).
 const MULTIPLIER_WORDS = {
-  100: ['hundred', 'sau', 'सौ', 'शंभर', 'shambhar'],
-  1000: ['thousand', 'hazaar', 'hazar', 'hajar', 'hajaar', 'हजार', 'हज़ार', 'k'],
-  100000: ['lakh', 'lakhs', 'lac', 'lacs', 'लाख'],
+  100: ['hundred', 'sau', 'सौ', 'शंभर', 'shambhar', 'వంద', 'వందలు', 'వందల', 'నూరు'],
+  1000: ['thousand', 'hazaar', 'hazar', 'hajar', 'hajaar', 'हजार', 'हज़ार', 'k', 'వెయ్యి', 'వేలు', 'వేల'],
+  100000: ['lakh', 'lakhs', 'lac', 'lacs', 'लाख', 'లక్ష', 'లక్షలు', 'లక్షల'],
   1000000: ['million'],
-  10000000: ['crore', 'crores', 'karod', 'करोड़', 'करोड', 'कोटी'],
+  10000000: ['crore', 'crores', 'karod', 'करोड़', 'करोड', 'कोटी', 'కోటి', 'కోట్లు', 'కోట్ల'],
 };
 
 // Fraction words that stand for a whole value: "dedh lakh" = 1.5 lakh.
@@ -95,7 +107,7 @@ const MODIFIER_WORDS = [
 ];
 
 // Words that may sit between parts of one number: "one hundred AND fifty".
-export const CONNECTORS = new Set(['and', 'aur', 'और', 'आणि', 'va', 'व'].map(normalize));
+export const CONNECTORS = new Set(['and', 'aur', 'और', 'आणि', 'va', 'व', 'మరియు'].map(normalize));
 
 function buildMap(entries) {
   const map = new Map();
@@ -107,6 +119,7 @@ export const UNIT_WORDS = buildMap([
   ...HINDI_1_TO_99.split(/\s+/).map((w, i) => [i + 1, [w]]),
   ...MARATHI_1_TO_99.split(/\s+/).map((w, i) => [i + 1, [w]]),
   ...Object.entries(EXTRA_WORDS),
+  ...Object.entries(TELUGU),
   ...Object.entries(FRACTION_VALUES),
 ]);
 

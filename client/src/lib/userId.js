@@ -48,7 +48,7 @@ export function detectLanguage() {
   const prefs = typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language];
   for (const tag of prefs) {
     const base = String(tag ?? '').toLowerCase().split('-')[0];
-    if (base === 'hi' || base === 'mr') return base;
+    if (base === 'hi' || base === 'mr' || base === 'te') return base; // te only if visible (App.jsx)
     if (base === 'en') return 'en';
   }
   return 'en';

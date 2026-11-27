@@ -49,7 +49,7 @@ test('month-only and date-type due values read naturally', () => {
 });
 
 test('summary: 5 points in the user’s language', () => {
-  for (const lang of ['en', 'hi', 'mr']) {
+  for (const lang of ['en', 'hi', 'mr', 'te']) {
     const lines = buildSummary(FIELDS_OK, lang).split('\n');
     assert.equal(lines.length, 5, lang);
     assert.ok(lines[0].includes('Suresh Sharma'), lang);

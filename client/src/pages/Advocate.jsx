@@ -233,7 +233,7 @@ function Review({ id, onAuthFail }) {
         <dl className="facts">
           {FIELDS.map((f) => (
             <div key={f.id}>
-              <dt>{f.label.en}</dt>
+              <dt>{f.advocateLabel}</dt>
               <dd lang={doc.language}>{displayFieldValue(f, doc.fields[f.id], 'en') || '—'}</dd>
             </div>
           ))}

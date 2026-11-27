@@ -14,7 +14,8 @@
     "dev:client": "npm run dev --workspace client",
     "build": "npm run build --workspace client",
     "start": "node server/src/index.js",
-    "test": "node --test \"shared/test/*.test.js\" \"client/test/*.test.js\" \"server/test/*.test.js\""
+    "test": "node --test \"shared/test/*.test.js\" \"client/test/*.test.js\" \"server/test/*.test.js\"",
+    "review:telugu": "node scripts/telugu-review.mjs"
   },
   "engines": {
     "node": ">=22"

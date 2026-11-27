@@ -12,6 +12,7 @@ export function normalize(text) {
       .replace(/ँ/g, 'ं') // chandrabindu → anusvara: पाँच → पांच
       .replace(/[​-‍﻿]/g, '') // zero-width joiners
       .replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - DEVANAGARI_DIGIT_ZERO)) // ३ → 3
+      .replace(/[౦-౯]/g, (d) => String(d.charCodeAt(0) - 0x0c66)) // Telugu ౩ → 3
       .replace(/[।॥]/g, ' ')
       .toLowerCase()
       .replace(/\s+/g, ' ')

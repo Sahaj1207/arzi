@@ -5,23 +5,27 @@ const DIGIT_WORDS = {
   en: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'],
   hi: ['शून्य', 'एक', 'दो', 'तीन', 'चार', 'पांच', 'छह', 'सात', 'आठ', 'नौ'],
   mr: ['शून्य', 'एक', 'दोन', 'तीन', 'चार', 'पाच', 'सहा', 'सात', 'आठ', 'नऊ'],
+  te: ['సున్నా', 'ఒకటి', 'రెండు', 'మూడు', 'నాలుగు', 'ఐదు', 'ఆరు', 'ఏడు', 'ఎనిమిది', 'తొమ్మిది'],
 };
 
 const MONTH_NAMES = {
   en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   hi: ['जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'],
   mr: ['जानेवारी', 'फेब्रुवारी', 'मार्च', 'एप्रिल', 'मे', 'जून', 'जुलै', 'ऑगस्ट', 'सप्टेंबर', 'ऑक्टोबर', 'नोव्हेंबर', 'डिसेंबर'],
+  te: ['జనవరి', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్', 'జూలై', 'ఆగస్టు', 'సెప్టెంబర్', 'అక్టోబర్', 'నవంబర్', 'డిసెంబర్'],
 };
 
-const RUPEES = { en: 'rupees', hi: 'रुपये', mr: 'रुपये' };
+const RUPEES = { en: 'rupees', hi: 'रुपये', mr: 'रुपये', te: 'రూపాయలు' };
 
 const UNIT_NAMES = {
   en: { day: ['day', 'days'], week: ['week', 'weeks'], month: ['month', 'months'], year: ['year', 'years'] },
   hi: { day: ['दिन', 'दिन'], week: ['हफ़्ता', 'हफ़्ते'], month: ['महीना', 'महीने'], year: ['साल', 'साल'] },
   mr: { day: ['दिवस', 'दिवस'], week: ['आठवडा', 'आठवडे'], month: ['महिना', 'महिने'], year: ['वर्ष', 'वर्षे'] },
+  te: { day: ['రోజు', 'రోజులు'], week: ['వారం', 'వారాలు'], month: ['నెల', 'నెలలు'], year: ['సంవత్సరం', 'సంవత్సరాలు'] },
 };
 
-const lang3 = (lang) => (lang === 'hi' || lang === 'mr' ? lang : 'en');
+// Languages with their own number / month words; anything else uses English.
+const lang3 = (lang) => (['hi', 'mr', 'te'].includes(lang) ? lang : 'en');
 
 // 150000 → "₹1,50,000" (Indian digit grouping)
 export function formatINR(value) {
@@ -42,7 +46,7 @@ export function spellDigits(value, lang) {
 export function speakAmount(value, lang) {
   const l = lang3(lang);
   const grouped = new Intl.NumberFormat('en-IN').format(value);
-  const lead = { en: 'That is', hi: 'यानी', mr: 'म्हणजे' }[l];
+  const lead = { en: 'That is', hi: 'यानी', mr: 'म्हणजे', te: 'అంటే' }[l];
   return `${grouped} ${RUPEES[l]}. ${lead}: ${spellDigits(value, l)}.`;
 }
 

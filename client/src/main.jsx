@@ -7,6 +7,9 @@ import '@fontsource/mukta/500.css';
 import '@fontsource/mukta/600.css';
 import '@fontsource/mukta/700.css';
 import '@fontsource/mukta/800.css';
+// Telugu script (Mukta has no Telugu glyphs; the browser falls back per character).
+import '@fontsource/noto-sans-telugu/400.css';
+import '@fontsource/noto-sans-telugu/700.css';
 // One serif accent word in the home headline (Latin + Devanagari).
 import '@fontsource/noto-serif-devanagari/500.css';
 import './styles.css';

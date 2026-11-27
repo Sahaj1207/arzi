@@ -12,6 +12,7 @@ const HEADINGS = {
   en: { summary: 'In simple words', consent: 'Consent' },
   hi: { summary: 'आसान शब्दों में', consent: 'सहमति' },
   mr: { summary: 'सोप्या शब्दांत', consent: 'संमती' },
+  te: { summary: 'సులభమైన మాటల్లో', consent: 'అంగీకారం' },
 };
 
 const CONSENT_TEXT = {
@@ -64,7 +65,7 @@ export function documentHtml(doc, { print = false } = {}) {
   * { box-sizing: border-box; }
   body {
     margin: 0; color: #111; font-size: 11.5pt; line-height: 1.55;
-    font-family: 'Noto Serif', Georgia, 'Times New Roman', 'Noto Sans Devanagari', serif;
+    font-family: 'Noto Serif', Georgia, 'Times New Roman', 'Noto Sans Devanagari', 'Noto Sans Telugu', serif;
   }
   .page { max-width: 180mm; margin: 0 auto; }
   h1 { font-size: 17pt; letter-spacing: 0.08em; text-align: center; margin: 0; }
@@ -74,7 +75,7 @@ export function documentHtml(doc, { print = false } = {}) {
   .reviewed { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid #999; font-weight: 700; }
   .summary, .consent {
     margin-top: 18pt; padding: 10pt 12pt; border: 1px solid #bbb; border-radius: 6pt;
-    font-family: 'Noto Sans Devanagari', 'Noto Sans', Arial, sans-serif; break-inside: avoid;
+    font-family: 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans', Arial, sans-serif; break-inside: avoid;
   }
   .summary h2, .consent h2 { font-size: 12pt; margin: 0 0 6pt; }
   .summary ol { margin: 0; padding-left: 16pt; }

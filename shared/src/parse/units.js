@@ -4,10 +4,10 @@
 import { normalize } from './normalize.js';
 
 const UNIT_STEMS = {
-  day: ['day', 'days', 'din', 'dino', 'दिन', 'दिवस'],
-  week: ['week', 'weeks', 'hafta', 'hafte', 'hafton', 'हफ्त', 'हफ्ते', 'सप्ताह', 'आठवड'],
-  month: ['month', 'months', 'mahina', 'mahine', 'mahino', 'mahinon', 'महीन', 'महिन'],
-  year: ['year', 'years', 'saal', 'sal', 'baras', 'साल', 'वर्ष', 'बरस'],
+  day: ['day', 'days', 'din', 'dino', 'दिन', 'दिवस', 'రోజు', 'రోజుల', 'దినాల'],
+  week: ['week', 'weeks', 'hafta', 'hafte', 'hafton', 'हफ्त', 'हफ्ते', 'सप्ताह', 'आठवड', 'వారం', 'వారాల', 'వారాలు'],
+  month: ['month', 'months', 'mahina', 'mahine', 'mahino', 'mahinon', 'महीन', 'महिन', 'నెల'],
+  year: ['year', 'years', 'saal', 'sal', 'baras', 'साल', 'वर्ष', 'बरस', 'సంవత్సర', 'ఏడాది', 'ఏళ్ల'],
 };
 
 export const DAYS_PER_UNIT = { day: 1, week: 7, month: 30, year: 365 };

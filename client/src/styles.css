@@ -28,8 +28,8 @@
   --red: #b3261e;
   --red-tint: #fbeae8;
 
-  --sans: 'Mukta', 'Noto Sans Devanagari', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --accent-serif: 'Noto Serif Devanagari', Georgia, serif;
+  --sans: 'Mukta', 'Noto Sans Telugu', 'Noto Sans Devanagari', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --accent-serif: 'Noto Serif Devanagari', Georgia, 'Noto Sans Telugu', serif;
   --r-sm: 12px;
   --r-md: 16px;
   --r-lg: 24px;
@@ -151,6 +151,9 @@ a.btn { display: grid; place-items: center; text-decoration: none; text-align: c
   font-size: 18px; font-weight: 600;
 }
 .lang:hover:not(.lang-on) { background: var(--sunk); }
+/* Four languages (Telugu visible to testers): tighter so it still fits a 375px phone */
+.lang-switch.count-4 { width: min(100%, 440px); }
+.lang-switch.count-4 .lang { padding: 0 6px; font-size: 16px; }
 .lang-on { background: var(--ink); color: #fff; }
 
 .hero-action { display: grid; gap: 16px; justify-items: center; width: 100%; }

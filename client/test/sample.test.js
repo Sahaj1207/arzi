@@ -34,7 +34,7 @@ function scriptedIo(lang, answers) {
   return io;
 }
 
-for (const lang of ['en', 'hi', 'mr']) {
+for (const lang of ['en', 'hi', 'mr', 'te']) {
   test(`sample case script completes the whole interview in ${lang}`, async () => {
     const io = scriptedIo(lang, SAMPLE_SCRIPT[lang]);
     const r = await runInterview(io, { today });
@@ -43,8 +43,8 @@ for (const lang of ['en', 'hi', 'mr']) {
     assert.equal(r.fields.depositAmount.amount, 25000);
     assert.deepEqual(r.fields.movedOutDate, { iso: '2026-09-15', precision: 'day' });
     assert.deepEqual(r.fields.dueDate, { kind: 'date', iso: '2026-09-30', precision: 'day' });
-    assert.ok(/Priya Sharma|प्रिया शर्मा/.test(r.fields.tenantName.text));
-    assert.ok(/Rajesh Gupta|राजेश गुप्ता/.test(r.fields.landlordName.text));
+    assert.ok(/Priya Sharma|प्रिया शर्मा|ప్రియా శర్మ/.test(r.fields.tenantName.text));
+    assert.ok(/Rajesh Gupta|राजेश गुप्ता|రాజేష్ గుప్తా/.test(r.fields.landlordName.text));
     assert.equal(r.aiConsent, null); // never asked in the sample
   });
 }

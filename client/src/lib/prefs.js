@@ -34,6 +34,21 @@ export function setRate(r) {
   return v;
 }
 
+// Languages still in translation review (Telugu) are hidden unless this device
+// opened the tester link once: https://<site>/?telugu=1   (turn off: ?telugu=0)
+const REVIEW_KEY = 'arzi.reviewLanguages';
+export function readReviewFlagFromUrl() {
+  try {
+    const v = new URLSearchParams(window.location.search).get('telugu');
+    if (v === '1') local.set(REVIEW_KEY, '1');
+    if (v === '0') local.set(REVIEW_KEY, '');
+  } catch {
+    /* no URL */
+  }
+}
+export const reviewLanguagesOn = () => local.get(REVIEW_KEY) === '1';
+export const isLanguageVisible = (l) => !l.review || reviewLanguagesOn();
+
 // Did the citizen allow outside AI services (Sarvam / Anthropic) in this session?
 // 'yes' | 'no' | null (not asked yet). Session only: asked again next visit.
 const AI_KEY = 'arzi.aiConsent';

@@ -1,4 +1,5 @@
 // Every sentence Arzi shows or speaks, per language.
+import { TE } from './i18n-te.js';
 // Step 1 holds the home screen lines; later steps add the interview lines here.
 const STRINGS = {
   en: {
@@ -484,8 +485,14 @@ const ACCENT = {
 };
 for (const lang of Object.keys(ACCENT)) Object.assign(STRINGS[lang], ACCENT[lang]);
 
+// Telugu lives in its own file (draft, awaiting native-speaker review).
+STRINGS.te = TE;
+
 // t('hi', 'confirmHeard', { value: '₹20,000' }) fills {value}.
 export function t(lang, key, vars) {
   const s = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key;
   return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
 }
+
+// For tests and the translation review sheet: which keys a language has.
+export const stringKeys = (lang) => Object.keys(STRINGS[lang] ?? {});
