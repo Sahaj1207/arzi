@@ -19,7 +19,8 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 
 ### Languages
 - **Fully supported, no keys needed:** Hindi (`hi-IN`), Marathi (`mr-IN`), English (`en-IN`), and **Telugu (`te-IN`)**. Telugu is added **only after step 8 works end to end in Hindi, Marathi and English**. A Telugu-speaking teammate checks the translations and tests by voice. Telugu needs the same pieces as the others: UI and spoken strings, field questions, number words, month names, yes/no and intent keywords, the plain-language summary template, digit-by-digit read-back, and a bundled Noto Sans Telugu font for the PDF.
-- **Beta languages (lowest priority, cut first if time runs short):** only when `SARVAM_API_KEY` is set, offer the other Indian languages Sarvam supports. They use Sarvam speech-to-text (and Sarvam text-to-speech where available) plus the LLM for field extraction and the translated summary, since we have no hand-written parsers or templates for them. They are **clearly labelled "Beta"** in the UI. Without a Sarvam key they are not shown at all.
+- **Beta languages (lowest priority, cut first if time runs short):** only when `SARVAM_API_KEY` is set, offer the other Indian languages Sarvam supports. They use Sarvam speech-to-text (and Sarvam text-to-speech where available) plus the LLM for field extraction and the translated summary, since we have no hand-written parsers or templates for them. They are **clearly labelled "Beta"** in the UI. Without a Sarvam key they are **still shown in the picker, greyed out and not selectable, with the note "Needs Sarvam key"**, so judges can see the feature exists.
+- **Telugu read-back voice:** many browsers have no Telugu text-to-speech voice. If the browser has none **and** a Sarvam key is set, use **Sarvam text-to-speech** for Telugu. With no key and no browser voice, fall back to on-screen text highlighting.
 - **Advocate:** reviews and approves drafts on a laptop or phone.
 
 ## 3. Core flow (must work end to end, citizen never has to type)
@@ -93,7 +94,8 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - [ ] With a Sarvam key set, speech uses Sarvam; removing the key or exhausting credits falls back to browser speech without errors.
 - [ ] PDF shows Hindi/Marathi text correctly.
 - [ ] (After step 8) Telugu works end to end by voice, translations checked by the Telugu-speaking teammate; PDF shows Telugu correctly.
-- [ ] (Optional, lowest priority) With a Sarvam key, Beta languages appear labelled "Beta"; without a key they are hidden.
+- [ ] (After step 8) With a Sarvam key and no browser Telugu voice, Telugu read-back uses Sarvam text-to-speech.
+- [ ] (Optional, lowest priority) With a Sarvam key, Beta languages are selectable and labelled "Beta"; without a key they show greyed out with "Needs Sarvam key".
 - [ ] README complete; commits are frequent and meaningful.
 
 ## 8. How to work
@@ -117,3 +119,5 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - 2026-11-27: Telugu (`te-IN`) becomes the 4th fully supported language, added only after step 8 works in hi/mr/en; a Telugu-speaking teammate reviews translations and tests by voice.
 - 2026-11-27: "Beta languages" mode: with a Sarvam key, offer Sarvam's other Indian languages via Sarvam speech + LLM extraction/summaries, labelled "Beta"; hidden without a key. Lowest priority.
 - 2026-11-27: Updated build order after step 8: Render deploy → Telugu → 9 optional providers (Sarvam, Anthropic, Wispr) → 10 README/polish → Beta languages (needs step 9's Sarvam + LLM). Cut order if short on time: Beta languages first, then Wispr, then Sarvam text-to-speech.
+- 2026-11-27: Changed: without a Sarvam key, Beta languages are shown greyed out with "Needs Sarvam key" (not hidden), so judges can see them.
+- 2026-11-27: With a Sarvam key, Telugu read-back uses Sarvam text-to-speech when the browser has no Telugu voice (so Sarvam TTS for Telugu is kept even if general Sarvam TTS is cut).

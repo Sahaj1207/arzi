@@ -4,6 +4,9 @@
 import { getLanguage } from '@arzi/shared';
 import { hasSpeechSynthesis } from './support.js';
 
+// Voices load asynchronously; start loading as soon as this file is imported.
+if (hasSpeechSynthesis()) speechSynthesis.getVoices();
+
 function loadVoices() {
   return new Promise((resolve) => {
     const voices = speechSynthesis.getVoices();
@@ -38,8 +41,34 @@ export async function speak(text, langCode, { rate = 0.92 } = {}) {
     u.voice = voice;
     u.lang = voice.lang;
     u.rate = rate;
-    u.onend = () => resolve({ spoken: true });
-    u.onerror = () => resolve({ spoken: false });
+
+    let settled = false;
+    const done = (spoken) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(safety);
+      clearInterval(keepAlive);
+      resolve({ spoken });
+    };
+
+    // Chrome sometimes never fires `onend` (no audio device, background tab),
+    // which would freeze the conversation. Give up after a generous estimate.
+    const expectedMs = (text.length * 85) / rate;
+    const safety = setTimeout(() => {
+      speechSynthesis.cancel();
+      done(true);
+    }, expectedMs + 4000);
+
+    // Chrome on desktop silently stops utterances longer than ~15 s unless nudged.
+    const keepAlive = setInterval(() => {
+      if (speechSynthesis.speaking && !speechSynthesis.paused) {
+        speechSynthesis.pause();
+        speechSynthesis.resume();
+      }
+    }, 10000);
+
+    u.onend = () => done(true);
+    u.onerror = (e) => done(e.error === 'interrupted' || e.error === 'canceled' ? true : false);
     speechSynthesis.speak(u);
   });
 }
