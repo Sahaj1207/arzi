@@ -6,6 +6,8 @@ Arzi lets a tenant create a legal notice for an unreturned security deposit just
 
 > Prototype for Scaler x Wispr Flow "India Runs on Voice", Round 2. **Not legal advice.**
 
+**Live demo:** https://arzi-2p1d.onrender.com (open in Chrome; advocate desk at `/advocate`, PIN `1234`). Free hosting: the first visit after a quiet spell may take a minute to wake up.
+
 ## Run it
 
 ```bash

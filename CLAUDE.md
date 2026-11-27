@@ -139,4 +139,5 @@ Real, frequent (tenants, students in PGs and hostels), one standard format, easy
 - 2026-11-27: Step 9 adds Sarvam transliteration of Devanagari/Telugu names and addresses into English letters for the English notice; summary keeps the original script.
 - 2026-11-27: Demo advocate default name "R. Mehta (demo)" (override `ADVOCATE_NAME`). "Reviewed by Advocate" line shown only once approved.
 - 2026-11-27: Live link on Render **free tier** (not Starter). Sample cases seeded on every startup. Live link uses `PDF_ENGINE=print` because 0.1 CPU makes Chromium PDFs take ~55 s (memory fits). User sets up an uptime ping.
+- 2026-11-27: Deployed via Render Blueprint `exs-dc4ionm1egvs738j6fkg` → service `arzi-2p1d`, live at https://arzi-2p1d.onrender.com (Singapore, free, auto-deploys on push to main).
 - 2026-11-27: Added before deploy: "Try a sample case" (scripted voice interview → demo auto-approve → read-back) + "Skip to an approved document"; consent prompt once per session before any outside AI service; read-back controls (pause/continue, repeat point, slower/faster).
